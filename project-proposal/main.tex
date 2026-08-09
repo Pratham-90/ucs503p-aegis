@@ -1,0 +1,292 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{longtable}
+\usepackage{array}
+
+% -----------------------------------------------------
+% bvraghav-tiet-ucs503p-article.sty
+% -----------------------------------------------------
+
+% Variable: Lab Instructor
+\makeatletter \newcommand{\BvrSetLabInstructor}[1]{%
+  \gdef\Bvr@LabInstructor{#1}}
+% default
+\newcommand{\Bvr@LabInstructor}{Dr. Raghav %
+  B. Venkataramaiyer}
+% public accessor
+\newcommand{\BvrLabInstructorValue}{\Bvr@LabInstructor}
+\makeatother
+
+% Add subtitle
+\usepackage{titling}
+% -- Set title bold
+\pretitle{\begin{center}\bfseries\fontsize{18bp}{18bp}\selectfont}
+\makeatletter
+\newcommand{\BvrSubtitle}[1]{%
+  \posttitle{%
+    \par\end{center}
+    \begin{center}\large#1\end{center}
+    \vskip 0.5em}%
+}
+\makeatother
+
+% Hints in the section title(s)
+\newcommand{\BvrHint}[1]{%
+  {\normalfont\normalsize\itshape\hfill #1}}
+
+% Requirement-ID macro: \ReqID{FR-1}
+\newcommand{\ReqID}[1]{\texttt{#1}}
+
+% -----------------------------------------------------
+
+\title{Aegis --- An Encrypted ``Dead Man's Switch'' Legacy Vault}
+
+\BvrSetLabInstructor{Dr. Raghav B. Venkataramaiyer}
+
+\BvrSubtitle{%
+  Software Requirements Specification (SRS) for UCS503P \\
+  Submitted to: \BvrLabInstructorValue \\ \bfseries
+  Thapar Institute of Engineering and Technology%
+}
+
+\author{
+  Pratham Arora, COE%
+  \thanks{Roll No: \texttt{1024030001}, %
+    Email: \texttt{parora\_be24@thapar.edu}}
+}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+  \noindent Aegis is an encrypted ``dead man's switch'' legacy vault. An
+  \emph{Owner} deposits encrypted files or messages into a \emph{vault} and
+  designates $N$ \emph{trustees} with a reconstruction \emph{threshold} $K$.
+  The system periodically requires the Owner to \emph{check in}; if a check-in
+  is missed and a configured \emph{grace period} lapses, the decryption key
+  --- pre-split using Shamir's Secret Sharing so that any $K$ of $N$ shares
+  reconstruct it and any $K-1$ reveal nothing --- is distributed to the
+  trustees, who together reconstruct the key and open the vault. This document
+  specifies the software requirements for version~1 (v1) of Aegis.
+\end{abstract}
+
+\section{Purpose \BvrHint{\ldots why this document exists}}
+This Software Requirements Specification (SRS) defines the functional and
+non-functional requirements of \textbf{Aegis}, an encrypted legacy vault built
+around a time-triggered release mechanism. It is the authoritative reference
+for the design, implementation, and evaluation of v1 across the UCS503P
+project timeline. The intended readers are the lab instructor/evaluator (as the
+acceptance authority) and the author (as the sole developer). Each functional
+requirement carries a traceable identifier (\ReqID{FR-\textit{n}}) and each
+non-functional requirement a category identifier (\ReqID{NFR-\textit{cat}-\textit{n}})
+so that later design, code, and tests can cite the requirement they satisfy.
+
+\section{Scope \BvrHint{\ldots what v1 is, and is not}}
+\subsection{In scope (v1)}
+Aegis v1 is a web application with a Python/FastAPI backend and a React
+frontend. It provides:
+\begin{itemize}[leftmargin=0.7cm]
+  \item account registration and authentication for Owners;
+  \item creation of a single vault per Owner and upload of an encrypted
+    payload;
+  \item configuration of a check-in interval and a grace period;
+  \item designation of $N$ trustees and a threshold $K$ ($1 \le K \le N$);
+  \item a scheduler that issues check-in prompts and, on missed check-in past
+    the grace period, distributes key shares to trustees;
+  \item a one-action check-in confirmation for the Owner;
+  \item trustee-side submission of $K$ shares to reconstruct the key and
+    decrypt the payload.
+\end{itemize}
+The algorithmic core is a hand-written implementation of \emph{Shamir's Secret
+Sharing} (SSS) over a finite field, together with symmetric encryption of the
+payload under the shared key.
+
+\subsection{Non-goals \BvrHint{\ldots explicit exclusions for v1}}
+The following are \textbf{explicitly out of scope} for v1 and must not be
+assumed by design or evaluation:
+\begin{enumerate}[leftmargin=0.9cm,label=\textbf{NG-\arabic*.}]
+  \item \textbf{No SMS.} All notifications are delivered by email (SMTP) only;
+    no SMS or telephony channel is provided.
+  \item \textbf{No mobile app.} Aegis v1 is a responsive web application only;
+    no native Android/iOS client is built.
+  \item \textbf{Single vault per user.} Each Owner has at most one vault in v1;
+    multi-vault management is deferred.
+\end{enumerate}
+
+\section{Glossary \BvrHint{\ldots shared vocabulary}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.24\textwidth}%
+    >{\raggedright\arraybackslash}p{0.68\textwidth}}
+  \textbf{Term} & \textbf{Definition} \\ \hline \endhead
+  \textbf{Vault} & The encrypted container owned by a single Owner, holding one
+    payload plus its release configuration and lifecycle state. \\
+  \textbf{Payload} & The Owner's secret data (files and/or messages), stored
+    only as ciphertext. \\
+  \textbf{Share} & One piece of the split decryption key produced by Shamir's
+    Secret Sharing; held by a single trustee. \\
+  \textbf{Threshold ($K$)} & The minimum number of shares required to
+    reconstruct the key; any $K$ of $N$ suffice, any $K-1$ reveal nothing. \\
+  \textbf{Grace period} & The additional time granted after a missed check-in
+    before the vault is released. \\
+  \textbf{Check-in} & An explicit, confirmed action by which the Owner signals
+    they are still present, resetting the release timer. \\
+  \textbf{Owner} & The registered user who creates a vault, uploads the
+    payload, and is prompted to check in. \\
+  \textbf{Trustee} & A person designated by the Owner to receive a key share
+    and participate in reconstruction after release. \\
+  \textbf{Scheduler} & The time-triggered system actor that tracks deadlines
+    and drives the vault through its lifecycle. \\
+\end{longtable}
+
+\section{System actors and models
+  \BvrHint{\ldots see \texttt{docs/} diagrams}}
+Aegis recognises three actors: the \textbf{Owner} and \textbf{Trustee} (human)
+and the \textbf{Scheduler} (a time-triggered system actor that initiates
+prompts and release without human action). The following models accompany this
+SRS and are maintained as Mermaid diagrams in the project documentation:
+\begin{itemize}[leftmargin=0.7cm]
+  \item \textbf{Use-case diagram} --- \texttt{docs/diagrams/use-case.md}
+    (actors Owner, Trustee, Scheduler).
+  \item \textbf{Vault lifecycle state diagram} ---
+    \texttt{docs/diagrams/vault-lifecycle.md}
+    (Active $\rightarrow$ Warning $\rightarrow$ Grace $\rightarrow$ Released).
+  \item \textbf{High-level architecture} ---
+    \texttt{docs/diagrams/architecture.md}.
+\end{itemize}
+
+\section{Functional Requirements
+  \BvrHint{\ldots traceable \ReqID{FR-\textit{n}}}}
+\begin{description}[leftmargin=0cm,style=nextline]
+  \item[\ReqID{FR-1} Registration \& authentication.] The system shall allow a
+    visitor to register as an Owner with an email and password, and shall
+    authenticate returning Owners. Credentials shall be verified before any
+    vault operation. Passwords are never stored in plaintext (see
+    \ReqID{NFR-SEC-3}).
+  \item[\ReqID{FR-2} Vault creation \& payload upload.] An authenticated Owner
+    shall be able to create their (single) vault and upload a payload (files
+    and/or a text message). The payload shall be encrypted client- or
+    server-side and persisted only as ciphertext (see \ReqID{NFR-SEC-1}).
+  \item[\ReqID{FR-3} Timing configuration.] The Owner shall configure the
+    \emph{check-in interval} (how often they must check in) and the
+    \emph{grace period} (additional time after a missed check-in before
+    release). Both are positive durations; the grace period may be zero only
+    if explicitly chosen.
+  \item[\ReqID{FR-4} Trustee designation \& threshold.] The Owner shall
+    designate $N \ge 1$ trustees (by email) and set a threshold $K$ with
+    $1 \le K \le N$. On confirmation, the system shall split the vault key into
+    $N$ Shamir shares with threshold $K$.
+  \item[\ReqID{FR-5} Scheduled check-in prompts.] The Scheduler shall, at each
+    interval boundary, transition the vault to \emph{Warning} and prompt the
+    Owner to check in via email (see \ReqID{NFR-PERF-2}).
+  \item[\ReqID{FR-6} One-action check-in confirmation.] The Owner shall be able
+    to confirm a check-in with a single action (one click on a tokenised link
+    or button), which resets the release timer and returns the vault to
+    \emph{Active}.
+  \item[\ReqID{FR-7} Share distribution on expiry.] If no valid check-in is
+    confirmed before the interval deadline \emph{and} the grace period have
+    both elapsed, the Scheduler shall transition the vault to \emph{Released}
+    and distribute one share to each trustee by email --- and shall do so
+    \textbf{only then} (see \ReqID{NFR-REL-1}).
+  \item[\ReqID{FR-8} $K$-of-$N$ reconstruction \& decryption.] After release,
+    the system shall accept shares submitted by trustees and, upon receiving
+    any $K$ valid shares, reconstruct the key and decrypt the payload for
+    retrieval. Fewer than $K$ shares shall not permit decryption.
+\end{description}
+
+\section{Non-Functional Requirements
+  \BvrHint{\ldots measurable \ReqID{NFR-\textit{cat}-\textit{n}}}}
+\subsection{Reliability \BvrHint{\ldots the catastrophic failure mode}}
+\begin{description}[leftmargin=0cm,style=nextline]
+  \item[\ReqID{NFR-REL-1} No early release.] The system shall \textbf{never}
+    release a vault (transition to \emph{Released} or distribute any share)
+    before the check-in deadline \emph{and} the full grace period have elapsed
+    with no confirmed check-in. \emph{Measure:} across an automated reliability
+    suite of $\ge 1000$ simulated schedules --- including process restarts,
+    timer resets, retries, and system-clock adjustments --- the count of
+    releases occurring earlier than \texttt{deadline + grace} shall be exactly
+    \textbf{zero}. This is the project's single most important requirement.
+  \item[\ReqID{NFR-REL-2} Durable deadlines.] Pending release deadlines shall
+    survive a process/host restart. \emph{Measure:} after a forced restart at
+    an arbitrary point, every previously scheduled deadline is re-armed and
+    fires no later than 60~s after its due time, with no deadline lost and none
+    fired early.
+  \item[\ReqID{NFR-REL-3} Exactly-once release.] Each vault shall be released
+    at most once and each trustee shall receive at most one share.
+    \emph{Measure:} no duplicate share emails under retry/concurrent execution
+    in the reliability suite.
+\end{description}
+
+\subsection{Security \BvrHint{\ldots payload confidentiality}}
+\begin{description}[leftmargin=0cm,style=nextline]
+  \item[\ReqID{NFR-SEC-1} Payload never in plaintext.] The payload shall never
+    be persisted in plaintext; only ciphertext plus non-secret metadata
+    (filename, size, MIME type) may be stored. \emph{Measure:} an automated
+    inspection of the database and file store finds no plaintext payload for
+    any vault; the plaintext key exists only transiently in memory during
+    encryption and reconstruction.
+  \item[\ReqID{NFR-SEC-2} Threshold secrecy.] Any set of at most $K-1$ shares
+    shall reveal no information about the key. \emph{Measure:} property tests
+    confirm that all $\binom{N}{K-1}$ share subsets are statistically
+    consistent with every possible secret (an intrinsic guarantee of SSS).
+  \item[\ReqID{NFR-SEC-3} Credential protection.] Passwords shall be stored
+    only as salted hashes using a memory-hard function (e.g. Argon2/bcrypt).
+    \emph{Measure:} no reversible or plaintext credential appears in storage.
+  \item[\ReqID{NFR-SEC-4} Transport security.] All client--server traffic shall
+    be over HTTPS/TLS in any deployed environment.
+\end{description}
+
+\subsection{Performance, usability, and maintainability}
+\begin{description}[leftmargin=0cm,style=nextline]
+  \item[\ReqID{NFR-PERF-1} Responsiveness.] A check-in confirmation shall be
+    processed within 500~ms at the 95th percentile under nominal load.
+  \item[\ReqID{NFR-PERF-2} Prompt timeliness.] A due check-in prompt shall be
+    dispatched within 60~s of its scheduled time.
+  \item[\ReqID{NFR-USE-1} One-action check-in.] Confirming a check-in shall
+    require exactly one deliberate user action and no re-authentication beyond
+    the tokenised link (supports \ReqID{FR-6}).
+  \item[\ReqID{NFR-MAINT-1} Code quality.] The codebase shall pass \texttt{ruff}
+    with no errors and maintain unit-test coverage $\ge 80\%$ on the
+    \texttt{crypto} and \texttt{scheduler} packages.
+  \item[\ReqID{NFR-PORT-1} Storage portability.] The system shall run against
+    SQLite (development) and PostgreSQL (later) without code changes, via the
+    SQLAlchemy abstraction.
+\end{description}
+
+\section{Assumptions and Constraints}
+\subsection{Assumptions}
+\begin{itemize}[leftmargin=0.7cm]
+  \item The Owner and every trustee have a working, monitored email address.
+  \item Trustees are cooperative and, after release, are willing to combine
+    their shares to open the vault.
+  \item The server's scheduling clock is the authoritative time source; the
+    Owner's timezone is recorded for display only.
+  \item Email delivery (SMTP) is reasonably reliable; transient failures are
+    retried.
+\end{itemize}
+\subsection{Constraints}
+\begin{itemize}[leftmargin=0.7cm]
+  \item \textbf{Platform:} Python~3 + FastAPI backend, SQLAlchemy persistence,
+    APScheduler scheduling, SMTP email, React~+~Tailwind frontend.
+  \item \textbf{Algorithmic:} Shamir's Secret Sharing is hand-written (finite-field
+    polynomial evaluation + Lagrange interpolation), not taken from a
+    third-party secret-sharing library; no HSM is used in v1.
+  \item \textbf{Product:} the v1 non-goals (NG-1\ldots NG-3) hold --- email
+    only, web only, one vault per Owner.
+  \item \textbf{Process:} the system is developed solo over a 12-week UCS503P
+    timeline with weekly, CI-backed increments.
+\end{itemize}
+
+\section{Requirement traceability \BvrHint{\ldots forward references}}
+The functional and non-functional identifiers defined here are cited directly
+in the module documentation (\texttt{code/*/README.md}) and will be cited by
+the corresponding tests as they are written, giving a requirement
+$\rightarrow$ module $\rightarrow$ test trace. The vault lifecycle referenced
+by \ReqID{FR-5}--\ReqID{FR-7} and \ReqID{NFR-REL-1} is specified by the state
+diagram in \texttt{docs/diagrams/vault-lifecycle.md}.
+
+\end{document}
