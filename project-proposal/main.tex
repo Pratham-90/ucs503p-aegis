@@ -1,5 +1,6 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{enumitem}
 \usepackage{graphicx}
@@ -15,8 +16,8 @@
 \makeatletter \newcommand{\BvrSetLabInstructor}[1]{%
   \gdef\Bvr@LabInstructor{#1}}
 % default
-\newcommand{\Bvr@LabInstructor}{Dr. Raghav %
-  B. Venkataramaiyer}
+\newcommand{\Bvr@LabInstructor}{Dr. Paramveer %
+  Sidhu}
 % public accessor
 \newcommand{\BvrLabInstructorValue}{\Bvr@LabInstructor}
 \makeatother
@@ -45,7 +46,7 @@
 
 \title{Aegis --- An Encrypted ``Dead Man's Switch'' Legacy Vault}
 
-\BvrSetLabInstructor{Dr. Raghav B. Venkataramaiyer}
+\BvrSetLabInstructor{Dr. Paramveer Sidhu}
 
 \BvrSubtitle{%
   Software Requirements Specification (SRS) for UCS503P \\
@@ -54,9 +55,7 @@
 }
 
 \author{
-  Pratham Arora, COE%
-  \thanks{Roll No: \texttt{1024030001}, %
-    Email: \texttt{parora\_be24@thapar.edu}}
+  Pratham Arora, Krishna Pandey, Nipun Behl (COE)
 }
 
 \date{\today}
