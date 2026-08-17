@@ -75,13 +75,72 @@
   specifies the software requirements for version~1 (v1) of Aegis.
 \end{abstract}
 
+\section{Problem Statement \BvrHint{\ldots the gap this project addresses}}
+Individuals routinely hold digital secrets that they cannot safely disclose while
+alive, yet which must not be lost when they die or become permanently
+incapacitated: banking and brokerage credentials, cryptocurrency private keys,
+password-manager master passwords, encrypted archives, business continuity
+information, and personal messages intended for specific recipients. The value of
+such data is entirely conditional on \emph{access}, and access is precisely what
+is destroyed by the owner's absence.
+
+Existing practice offers two options, and both are unsatisfactory:
+\begin{enumerate}[leftmargin=0.9cm,label=(\alph*)]
+  \item \textbf{Disclose now.} The owner shares the secret with a trusted person
+    or writes it into a document held by a custodian. This converts a
+    confidentiality problem into a trust problem that must hold indefinitely: the
+    secret is readable from the moment it is shared, and its safety depends on the
+    continued honesty, competence, and availability of a single party.
+  \item \textbf{Disclose never.} The owner tells no one. Confidentiality is
+    preserved perfectly, and the data is irrecoverably lost on the owner's death.
+\end{enumerate}
+
+Conventional instruments such as sealed wills and escrow arrangements sit within
+option~(a) and inherit its central weakness --- a \textbf{single point of
+failure}. One document, one custodian, and one occasion on which it is opened: if
+the document is destroyed, the custodian is compromised or unreachable, or the
+release is contested, the owner's intent is not carried out. Furthermore, these
+instruments are triggered by an external legal or administrative process rather
+than by the absence of the owner, and are therefore unsuitable for digital assets
+that require timely release.
+
+The problem this project addresses is therefore:
+
+\begin{quote}
+  \itshape How can a system release a secret to designated recipients when, and
+  only when, its owner has become unresponsive --- without any single party,
+  including the system operator, being able to read that secret beforehand, and
+  without the release depending on any single custodian?
+\end{quote}
+
+A solution must satisfy three properties simultaneously, and it is their
+combination that makes the problem non-trivial:
+\begin{itemize}[leftmargin=0.7cm]
+  \item \textbf{Conditional release.} Disclosure must be triggered automatically
+    by the owner's sustained non-response, not by a human decision.
+  \item \textbf{Distributed trust.} No single recipient may hold enough material
+    to open the vault alone, so that neither the loss nor the betrayal of one
+    party is sufficient to defeat the system.
+  \item \textbf{Temporal safety.} The system must never disclose early. A
+    premature release is unrecoverable --- the secret cannot be un-revealed ---
+    and is therefore treated in this specification as the catastrophic failure
+    mode (\ReqID{NFR-REL-1}).
+\end{itemize}
+
+\textbf{Aegis} addresses this problem by combining a \emph{dead man's switch} ---
+a periodic check-in whose absence, rather than whose presence, is the trigger ---
+with \emph{Shamir's Secret Sharing}, which splits the vault's decryption key into
+$N$ shares such that any $K$ reconstruct it and any $K-1$ reveal nothing about it
+in an information-theoretic sense. The former provides conditional release; the
+latter eliminates the single custodian.
+
 \section{Purpose \BvrHint{\ldots why this document exists}}
 This Software Requirements Specification (SRS) defines the functional and
 non-functional requirements of \textbf{Aegis}, an encrypted legacy vault built
 around a time-triggered release mechanism. It is the authoritative reference
 for the design, implementation, and evaluation of v1 across the UCS503P
 project timeline. The intended readers are the lab instructor/evaluator (as the
-acceptance authority) and the author (as the sole developer). Each functional
+acceptance authority) and the project team (as the developers). Each functional
 requirement carries a traceable identifier (\ReqID{FR-\textit{n}}) and each
 non-functional requirement a category identifier (\ReqID{NFR-\textit{cat}-\textit{n}})
 so that later design, code, and tests can cite the requirement they satisfy.
@@ -276,7 +335,7 @@ SRS and are maintained as Mermaid diagrams in the project documentation:
     third-party secret-sharing library; no HSM is used in v1.
   \item \textbf{Product:} the v1 non-goals (NG-1\ldots NG-3) hold --- email
     only, web only, one vault per Owner.
-  \item \textbf{Process:} the system is developed solo over a 12-week UCS503P
+  \item \textbf{Process:} the system is developed by a three-member team over a 12-week UCS503P
     timeline with weekly, CI-backed increments.
 \end{itemize}
 
