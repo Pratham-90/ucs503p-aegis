@@ -10,7 +10,7 @@ page is updated as the project progresses.
 | **1** ✅ | Requirements & scaffolding | Repo + module scaffold, SRS, diagrams, Shamir spike, this plan | `FR-1…8`, `NFR-*` (specified) |
 | **2** | Domain model & persistence | `vault` package: SQLAlchemy models (Owner, Vault, Payload, Trustee, Share, CheckIn) + repositories on SQLite; unit tests | `FR-2`, `NFR-PORT-1` |
 | **3** | Auth & vault API | FastAPI app; registration/login; create vault + upload payload; timing config | `FR-1`, `FR-2`, `FR-3`, `NFR-SEC-3` |
-| **4** | Crypto module (hardened) | Production `crypto`: Shamir split/reconstruct + authenticated payload encryption; property tests | `FR-4`, `FR-8`, `NFR-SEC-1`, `NFR-SEC-2` |
+| **4** | Crypto core + test vectors | Hardened **Python** `crypto` (authoritative spec + test oracle): Shamir split/reconstruct + authenticated payload encryption, **property tests (Hypothesis)**, and a committed **versioned test-vector artifact** the JS client crypto is validated against | `FR-2a`, `FR-4`, `FR-8`, `NFR-SEC-1`, `NFR-SEC-2`, `NFR-MAINT-1` |
 | **5** | Scheduler core | APScheduler; Active→Warning→Grace→Released state machine; **persistent, never-early** deadlines; reliability suite | `FR-5`, `NFR-REL-1`, `NFR-REL-2`, `NFR-REL-3` |
 | **6** | Notifications & check-in | SMTP prompts/reminders; one-action tokenised check-in confirmation | `FR-5`, `FR-6`, `NFR-PERF-2`, `NFR-USE-1` |
 | **7** | Release path end-to-end | Share distribution on expiry; trustee share submission; K-of-N reconstruct + decrypt | `FR-7`, `FR-8` |

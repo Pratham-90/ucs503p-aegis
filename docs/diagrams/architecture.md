@@ -65,15 +65,19 @@ plaintext share (`NFR-SEC-5`).
 
 | Component | Responsibility | Location |
 | --- | --- | --- |
-| Client crypto | Key generation, payload encryption, Shamir split **and** reconstruction | **client** (browser) |
+| Client crypto (JS/WASM) | Key generation, payload encryption, Shamir split **and** reconstruction — the **deployed** crypto | **client** (browser) |
+| crypto (Python) | **Authoritative** SSS spec + test oracle; emits the shared test vectors the JS must reproduce | `code/crypto` (dev/test) |
 | Web UI | Owner/trustee interactions, responsive web only (NG-2) | client |
 | API layer | Transport, auth, validation, orchestration — no payload crypto | `code/api` (server) |
 | scheduler | Deadlines, lifecycle transitions, the never-early release gate | `code/scheduler` (server) |
 | vault | Domain models & repositories; stores ciphertext + blobs + metadata | `code/vault` (server) |
 | notifications | Check-in prompts and encrypted-blob delivery over SMTP | `code/notifications` (server) |
 
-> `code/crypto` retains a **reference implementation + shared test vectors** used
-> to validate the client crypto; the live cryptography runs client-side.
+> **Crypto: two implementations, one spec.** The deployed cryptography is the
+> client crypto (JS/WASM) above. The Python `code/crypto` package is the
+> **authoritative specification and test oracle** — fully unit/property-tested
+> (`NFR-MAINT-1`) — that emits versioned test vectors the JS must reproduce
+> exactly. Neither is a throwaway reference to the other.
 
 ## Trust and data-flow notes
 

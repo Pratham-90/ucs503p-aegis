@@ -12,38 +12,47 @@ The cryptographic core of Aegis. Two concerns live here:
    (authenticated encryption planned, e.g. AES-GCM) under the key that SSS
    protects. Ciphertext is what the `vault` layer persists — never plaintext.
 
-## Where this runs — the trust model changed (Week 2)
+## Two implementations, one specification (Week 2 trust model)
 
 Under the [zero-knowledge trust model](../../docs/srs/index.md#23-trust-model),
-**the live cryptography runs client-side (in the browser), not on the server.**
-Key generation, payload encryption, the Shamir split, per-trustee share
-encryption, and `K`-of-`N` reconstruction all happen on the Owner's and
-trustees' devices (`FR-2`, `FR-2a`, `FR-8`). The server never holds the key, a
-plaintext share, or the payload (`NFR-SEC-5`).
+the **deployed** cryptography runs client-side — key generation, payload
+encryption, the Shamir split, per-trustee share encryption, and `K`-of-`N`
+reconstruction all happen in the Owner's and trustees' browsers (`FR-2`,
+`FR-2a`, `FR-8`); the server never holds the key, a plaintext share, or the
+payload (`NFR-SEC-5`).
 
-This Python package therefore is **not** the production crypto path. It serves
-as:
+To keep that client crypto correct, Aegis uses **two implementations bound by
+shared, versioned test vectors** — standard practice for cryptographic
+libraries (known-answer tests across implementations):
 
-- a **reference implementation** of the SSS math (the same algorithm the client
-  must implement), and
-- a **shared test-vector generator** — known (secret, shares) tuples used to
-  cross-validate the client (JS/WASM) implementation so the two agree bit-for-bit.
+1. **Python (`code/crypto`) — the authoritative specification and test oracle.**
+   This is the algorithmic core of the project. It is fully **unit- and
+   property-tested** (Python + Hypothesis) and carries the coverage obligation of
+   `NFR-MAINT-1` (≥80% on this package). It defines what "correct" means.
+2. **Test vectors — a committed, versioned artifact.** The Python package emits a
+   file of known inputs and outputs (secrets, polynomial coefficients where
+   applicable, shares, and reconstructions). It is checked into the repo and is a
+   **Week-4 deliverable**.
+3. **JavaScript — the deployment target.** The browser implementation consumes
+   the *same* vectors in its own test suite and must reproduce them exactly.
 
-## Reference surface (planned)
+The Python code is therefore not a throwaway reference: it is the specification
+the deployed JavaScript is validated against.
+
+## Public surface
 
 | Function | Responsibility |
 | --- | --- |
-| `split_secret(secret, n, k)` | Reference `n` shares with threshold `k`. |
-| `reconstruct_secret(shares)` | Reference recovery from any `k` shares. |
-| `test_vectors(...)` | Emit fixed (secret, shares) tuples for client cross-checks. |
-
-Payload `encrypt`/`decrypt` are specified here but executed client-side; the
-server stores only their ciphertext output.
+| `split_secret(secret, n, k)` | Authoritative `n` shares with threshold `k`. |
+| `reconstruct_secret(shares)` | Authoritative recovery from any `k` shares. |
+| `emit_test_vectors(...)` | Write the versioned known-answer vectors the JS must match. |
+| `encrypt_payload` / `decrypt_payload` | Specify payload sealing; executed client-side, ciphertext stored server-side. |
 
 ## Status
 
 Week 1: scaffold + a throwaway feasibility spike (`code/spikes/shamir_spike.py`).
-Week 2: responsibility clarified — crypto is client-side; this package is the
-reference + test vectors. Hardening (constant-time field arithmetic, CSPRNG,
-authenticated encryption, share integrity/authenticity) is scheduled for
-**Week 4**, and must hold for the *client* implementation.
+Week 2: structure clarified — Python is the authoritative spec + test oracle, the
+deployed crypto is JS, and the two are bound by shared test vectors.
+Week 4: harden the Python core (constant-time field arithmetic, CSPRNG,
+authenticated encryption, share integrity/authenticity), ship the property-test
+suite, and emit the versioned test-vector artifact the JS validates against.
