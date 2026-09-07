@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aegis — 60-second explainer</title>
+<style>
+  :root{
+    --bg:#0b1020; --ink:#e8ecf6; --muted:#93a1bd; --amber:#f5b301; --amber2:#ffd66b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{position:relative;width:100%;height:100%;min-height:100vh;display:flex;
+    align-items:center;justify-content:center;overflow:hidden;}
+  svg{width:100%;height:auto;max-height:100vh;display:block}
+  .topbar{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;
+    gap:14px;padding:14px 20px;z-index:5;pointer-events:none}
+  .progress{flex:1;height:5px;background:rgba(255,255,255,.10);border-radius:3px;overflow:hidden}
+  .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--amber),var(--amber2));}
+  .scenelabel{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+    font-weight:600;min-width:150px;text-align:right}
+  .caption{position:absolute;left:50%;bottom:6.5%;transform:translateX(-50%);
+    width:min(92%,1000px);text-align:center;font-size:clamp(18px,2.6vw,32px);
+    font-weight:600;line-height:1.32;z-index:5;pointer-events:none;
+    text-shadow:0 2px 18px rgba(0,0,0,.65)}
+  .caption b{color:var(--amber2)}
+  .replay{position:absolute;right:20px;bottom:18px;z-index:6;
+    background:var(--amber);color:#1a1200;border:0;border-radius:999px;
+    padding:11px 20px;font-size:15px;font-weight:700;cursor:pointer;
+    box-shadow:0 6px 22px rgba(245,179,1,.35);transition:transform .15s,opacity .3s}
+  .replay:hover{transform:translateY(-1px)}
+  .replay.pulse{animation:rp 1.4s ease-in-out infinite}
+  @keyframes rp{0%,100%{box-shadow:0 6px 22px rgba(245,179,1,.35)}50%{box-shadow:0 6px 30px rgba(245,179,1,.75)}}
+  text{font-family:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="progress"><i id="bar"></i></div>
+    <div class="scenelabel" id="slabel">Aegis</div>
+  </div>
+  <svg id="stage" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid meet" aria-label="Aegis explainer animation">
+    <defs>
+      <radialGradient id="bgglow" cx="50%" cy="42%" r="70%">
+        <stop offset="0%" stop-color="#16213f"/>
+        <stop offset="100%" stop-color="#0b1020"/>
+      </radialGradient>
+      <linearGradient id="amberG" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ffd66b"/><stop offset="100%" stop-color="#f5b301"/>
+      </linearGradient>
+      <marker id="arrow3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#93a1bd"/>
+      </marker>
+    </defs>
+    <rect x="0" y="0" width="1280" height="720" fill="url(#bgglow)"/>
+    <g id="s1"></g>
+    <g id="s2"></g>
+    <g id="s3"></g>
+    <g id="s4"></g>
+    <g id="s5"></g>
+  </svg>
+  <div class="caption" id="caption"></div>
+  <button class="replay" id="replay">↻ Replay</button>
+</div>
+<script>
+(function(){
+  "use strict";
+  const NS="http://www.w3.org/2000/svg";
+  const $=(id)=>document.getElementById(id);
+  function el(name,attrs,parent){
+    const e=document.createElementNS(NS,name);
+    if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);
+    if(parent)parent.appendChild(e);
+    return e;
+  }
+  // colour palette (hex — SVG attributes don't resolve CSS var())
+  const C={amber:"#f5b301",amber2:"#ffd66b",green:"#4ade80",warn:"#fbbf24",
+    grace:"#fb923c",red:"#f87171",blue:"#60a5fa",muted:"#93a1bd",ink:"#e8ecf6",
+    ink2:"#cdd6ee",grey:"#7f8db0",greyOwner:"#54607a",panel:"#0e1730"};
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const easeOut=(t)=>1-Math.pow(1-t,3);
+  const inn=(t,s,f)=>clamp((t-s)/(f||300),0,1);
+  const out=(t,e,f)=>clamp((e-t)/(f||300),0,1);
+  const win=(t,s,e,f)=>Math.min(inn(t,s,f),out(t,e,f));
+  const setop=(node,v)=>{ if(node) node.style.opacity=v; };
+  const scaleAbout=(px,py,s)=>`translate(${(px*(1-s)).toFixed(2)} ${(py*(1-s)).toFixed(2)}) scale(${s.toFixed(3)})`;
+  const R={};
+
+  function person(parent, cx, cy, s, color){
+    const g=el("g",{},parent);
+    el("circle",{cx:cx,cy:cy-14*s,r:11*s,fill:color},g);
+    el("path",{d:`M ${cx-15*s} ${cy+24*s} a ${15*s} ${17*s} 0 0 1 ${30*s} 0 z`,fill:color},g);
+    return g;
+  }
+  function vault(parent, cx, cy, s){
+    const g=el("g",{},parent);
+    el("rect",{x:cx-54*s,y:cy-40*s,width:108*s,height:92*s,rx:12*s,
+      fill:C.panel,stroke:"url(#amberG)","stroke-width":4*s},g);
+    const shackle=el("path",{d:`M ${cx-26*s} ${cy-40*s} v ${-20*s} a ${26*s} ${26*s} 0 0 1 ${52*s} 0 v ${20*s}`,
+      fill:"none",stroke:"url(#amberG)","stroke-width":7*s,"stroke-linecap":"round"},g);
+    el("circle",{cx:cx,cy:cy+4*s,r:11*s,fill:"none",stroke:"url(#amberG)","stroke-width":5*s},g);
+    el("rect",{x:cx-3*s,y:cy+4*s,width:6*s,height:26*s,fill:"url(#amberG)"},g);
+    return {g,shackle};
+  }
+
+  // ===== SCENE 1 : the problem =====
+  (function(){
+    const g=$("s1");
+    R.s1title=el("text",{x:640,y:96,"text-anchor":"middle",fill:C.ink2,"font-size":30,"font-weight":700},g);
+    R.s1title.textContent="You hold something worth protecting";
+    person(g,640,300,2.4,C.ink2);
+    const doc=el("g",{},g); R.s1doc=doc;
+    el("rect",{x:600,y:250,width:80,height:100,rx:8,fill:C.panel,stroke:"url(#amberG)","stroke-width":3},doc);
+    el("text",{x:640,y:296,"text-anchor":"middle",fill:C.amber2,"font-size":16,"font-weight":700},doc).textContent="SECRETS";
+    el("circle",{cx:640,cy:326,r:9,fill:"none",stroke:C.amber2,"stroke-width":3},doc);
+    const optL=el("g",{},g); R.s1optL=optL;
+    el("text",{x:300,y:470,"text-anchor":"middle",fill:C.ink2,"font-size":24,"font-weight":700},optL).textContent="Tell someone now";
+    el("text",{x:300,y:508,"text-anchor":"middle",fill:C.muted,"font-size":17},optL).textContent="exposed while you're still here";
+    R.s1xL=el("text",{x:300,y:420,"text-anchor":"middle",fill:C.red,"font-size":54,"font-weight":800},g);R.s1xL.textContent="✕";
+    const optR=el("g",{},g); R.s1optR=optR;
+    el("text",{x:980,y:470,"text-anchor":"middle",fill:C.ink2,"font-size":24,"font-weight":700},optR).textContent="Lose it forever";
+    el("text",{x:980,y:508,"text-anchor":"middle",fill:C.muted,"font-size":17},optR).textContent="gone if you're gone";
+    R.s1xR=el("text",{x:980,y:420,"text-anchor":"middle",fill:C.red,"font-size":54,"font-weight":800},g);R.s1xR.textContent="✕";
+  })();
+  function upd1(t){
+    setop(R.s1title, inn(t,200,600));
+    setop(R.s1doc, inn(t,700,700));
+    setop(R.s1optL, inn(t,2600,600));
+    setop(R.s1optR, inn(t,3400,600));
+    setop(R.s1xL, inn(t,4600,500));
+    setop(R.s1xR, inn(t,5400,500));
+  }
+
+  // ===== SCENE 2 : check-in loop =====
+  (function(){
+    const g=$("s2");
+    R.s2vault=vault(g,640,330,2.0).g;
+    R.s2sealed=el("text",{x:640,y:150,"text-anchor":"middle",fill:C.green,"font-size":24,"font-weight":700},g);
+    R.s2sealed.textContent="SEALED";
+    const r=96, c=2*Math.PI*r; R.s2c=c;
+    el("circle",{cx:640,cy:330,r:r,fill:"none",stroke:"rgba(255,255,255,.10)","stroke-width":12},g);
+    R.s2ring=el("circle",{cx:640,cy:330,r:r,fill:"none",stroke:C.amber,"stroke-width":12,
+      "stroke-linecap":"round","stroke-dasharray":c,"stroke-dashoffset":0,transform:"rotate(-90 640 330)"},g);
+    const btn=el("g",{},g);
+    R.s2btnbg=el("rect",{x:548,y:520,width:184,height:58,rx:29,fill:C.green},btn);
+    el("text",{x:640,y:557,"text-anchor":"middle",fill:"#05210f","font-size":22,"font-weight":800},btn).textContent="✓  I'm here";
+    R.s2cursor=el("path",{d:"M0 0 L0 26 L7 19 L12 30 L16 28 L11 18 L20 18 Z",fill:"#fff",stroke:"#0b1020","stroke-width":1.5},g);
+    R.s2flash=el("text",{x:640,y:250,"text-anchor":"middle",fill:C.green,"font-size":30,"font-weight":800},g);
+    R.s2flash.textContent="✓ checked in";
+  })();
+  function upd2(t){
+    const cycle=4000, dep=3200, k=(t%cycle), p=clamp(k/dep,0,1);
+    R.s2ring.setAttribute("stroke-dashoffset", R.s2c*p);
+    R.s2ring.setAttribute("stroke", p>0.8?C.warn:C.amber);
+    const near=clamp((k-2100)/1000,0,1);
+    R.s2cursor.setAttribute("transform",`translate(${lerp(880,660,easeOut(near))},${lerp(300,548,easeOut(near))})`);
+    setop(R.s2cursor, inn(t,300,400));
+    const clicking = k>3050 && k<3300;
+    R.s2btnbg.setAttribute("transform", clicking?scaleAbout(640,549,0.95):"scale(1)");
+    setop(R.s2flash, (k>3200?win(k,3200,3950,150):0));
+    setop(R.s2sealed, 0.55+0.45*Math.abs(Math.sin(t/500)));
+  }
+
+  // ===== SCENE 3 : silence / state machine =====
+  const STATES=[["Active",C.green],["Warning",C.warn],["Grace",C.grace],["Released",C.red]];
+  (function(){
+    const g=$("s3");
+    el("text",{x:640,y:120,"text-anchor":"middle",fill:C.ink2,"font-size":26,"font-weight":700},g).textContent="…but the check-ins stop";
+    person(g,640,250,2.0,C.greyOwner);
+    R.s3zzz=el("text",{x:706,y:210,fill:C.muted,"font-size":26,"font-weight":700},g); R.s3zzz.textContent="z z";
+    R.s3boxes=[]; const xs=[230,510,790,1070], y=430;
+    for(let i=0;i<4;i++){
+      R.s3boxes.push(el("rect",{x:xs[i]-92,y:y-38,width:184,height:76,rx:14,fill:C.panel,stroke:STATES[i][1],"stroke-width":2.5},g));
+      el("text",{x:xs[i],y:y+8,"text-anchor":"middle",fill:C.ink,"font-size":22,"font-weight":700},g).textContent=STATES[i][0];
+      if(i<3) el("path",{d:`M ${xs[i]+94} ${y} L ${xs[i+1]-98} ${y}`,stroke:C.muted,"stroke-width":3,"marker-end":"url(#arrow3)"},g);
+    }
+    el("rect",{x:230,y:520,width:840,height:16,rx:8,fill:"rgba(255,255,255,.10)"},g);
+    R.s3bar=el("rect",{x:230,y:520,width:840,height:16,rx:8,fill:C.red},g);
+    R.s3ct=el("text",{x:650,y:566,"text-anchor":"middle",fill:C.muted,"font-size":16},g);
+  })();
+  function upd3(t,dur){
+    const p=clamp(t/dur,0,1);
+    R.s3bar.setAttribute("width", 840*(1-p));
+    R.s3bar.setAttribute("fill", p<.5?C.warn:p<.82?C.grace:C.red);
+    setop(R.s3zzz, 0.4+0.6*Math.abs(Math.sin(t/430)));
+    let idx = t<3000?0 : t<6500?1 : t<10000?2 : 3;
+    for(let i=0;i<4;i++){
+      R.s3boxes[i].setAttribute("fill", i===idx?STATES[i][1]:C.panel);
+      R.s3boxes[i].setAttribute("opacity", i<=idx?1:0.4);
+    }
+    R.s3ct.textContent="grace remaining ≈ "+Math.max(0,Math.ceil((1-p)*72))+"h";
+  }
+
+  // ===== SCENE 4 : key split (centrepiece) =====
+  const PX=(x)=>600+x*145, PY=(y)=>540-y*40;
+  function quadPath(a){
+    let d="",first=true;
+    for(let x=0;x<=4.0001;x+=0.1){const y=4+a*(x-1)*(x-2);d+=(first?"M":"L")+PX(x).toFixed(1)+" "+PY(y).toFixed(1)+" ";first=false;}
+    return d;
+  }
+  const TRUE_A=0.5, FAM=[-1.5,-0.5,0.5,1.5,2.5];
+  (function(){
+    const g=$("s4");
+    R.s4key=el("g",{},g);
+    el("circle",{cx:300,cy:300,r:20,fill:"none",stroke:"url(#amberG)","stroke-width":7},R.s4key);
+    el("rect",{x:314,y:294,width:70,height:12,fill:"url(#amberG)"},R.s4key);
+    el("rect",{x:360,y:306,width:10,height:18,fill:"url(#amberG)"},R.s4key);
+    el("rect",{x:340,y:306,width:8,height:14,fill:"url(#amberG)"},R.s4key);
+    R.trustees=[]; R.shards=[]; const ty=[110,205,300,395,490];
+    for(let i=0;i<5;i++){
+      person(g,140,ty[i],1.4,C.grey);
+      el("text",{x:140,y:ty[i]+42,"text-anchor":"middle",fill:C.muted,"font-size":13},g).textContent="Trustee "+(i+1);
+      R.trustees.push({x:140,y:ty[i]});
+      const sh=el("g",{},g);
+      el("path",{d:"M0 -11 L10 0 L0 11 L-10 0 Z",fill:"url(#amberG)",stroke:"#1a1200","stroke-width":1},sh);
+      el("text",{x:0,y:4,"text-anchor":"middle",fill:"#1a1200","font-size":11,"font-weight":800},sh).textContent="S"+(i+1);
+      R.shards.push(sh);
+    }
+    R.s4lbl=el("text",{x:300,y:560,"text-anchor":"middle",fill:C.muted,"font-size":16},g); R.s4lbl.textContent="key → 5 shares";
+    const mp=el("g",{},g); R.s4panel=mp;
+    el("rect",{x:566,y:96,width:648,height:520,rx:16,fill:"rgba(15,26,48,.66)",stroke:"rgba(255,255,255,.08)"},mp);
+    el("line",{x1:PX(0),y1:PY(0),x2:PX(4),y2:PY(0),stroke:"#43507a","stroke-width":2},mp);
+    el("line",{x1:PX(0),y1:540,x2:PX(0),y2:130,stroke:"#43507a","stroke-width":2},mp);
+    el("text",{x:PX(0),y:585,"text-anchor":"middle",fill:C.muted,"font-size":15},mp).textContent="x = 0";
+    el("text",{x:PX(0)-6,y:120,"text-anchor":"middle",fill:C.amber2,"font-size":15,"font-weight":700},mp).textContent="the key = f(0)";
+    R.fam=[]; R.famDot=[];
+    FAM.forEach(a=>{
+      R.fam.push(el("path",{d:quadPath(a),fill:"none",stroke:C.blue,"stroke-width":2,opacity:0},mp));
+      R.famDot.push(el("circle",{cx:PX(0),cy:PY(4+2*a),r:6,fill:C.blue,opacity:0},mp));
+    });
+    R.p1=el("circle",{cx:PX(1),cy:PY(4),r:8,fill:C.amber2,opacity:0},mp);
+    R.p2=el("circle",{cx:PX(2),cy:PY(4),r:8,fill:C.amber2,opacity:0},mp);
+    R.p3=el("circle",{cx:PX(3),cy:PY(5),r:8,fill:C.amber2,opacity:0},mp);
+    R.trueCurve=el("path",{d:quadPath(TRUE_A),fill:"none",stroke:C.amber,"stroke-width":4,opacity:0},mp);
+    R.keyDot=el("circle",{cx:PX(0),cy:PY(5),r:10,fill:C.amber,opacity:0},mp);
+    R.s4msg=el("text",{x:890,y:150,"text-anchor":"middle","font-size":22,"font-weight":700,opacity:0},mp);
+  })();
+  function upd4(t){
+    const SPLIT=5000, A0=5200, B0=11200;
+    const fp=easeOut(clamp(t/SPLIT,0,1));
+    for(let i=0;i<5;i++){
+      const tr=R.trustees[i];
+      R.shards[i].setAttribute("transform",`translate(${lerp(300,tr.x,fp)},${lerp(300,tr.y,fp)}) rotate(${lerp(0,360,fp)})`);
+      setop(R.shards[i], inn(t,300+i*60,400));
+    }
+    setop(R.s4key, out(t,SPLIT-200,600)*inn(t,200,400));
+    setop(R.s4lbl, win(t,600,SPLIT,400));
+    setop(R.s4panel, inn(t,A0-400,600));
+    const aOn=win(t,A0,B0,400);
+    setop(R.p1, inn(t,A0,400));
+    setop(R.p2, inn(t,A0,400));
+    R.fam.forEach(f=> setop(f, Math.min(aOn*0.55, out(t,B0,400)*0.55)) );
+    R.famDot.forEach(d=> setop(d, Math.min(aOn, out(t,B0,400))) );
+    const bOn=inn(t,B0,500);
+    setop(R.p3, inn(t,B0,400));
+    setop(R.trueCurve, bOn);
+    setop(R.keyDot, bOn);
+    if(bOn>0){ R.keyDot.setAttribute("transform", scaleAbout(PX(0),PY(5),1+0.18*Math.abs(Math.sin(t/300)))); }
+    if(t<B0){ R.s4msg.textContent="2 shares → key could be anywhere ✕"; R.s4msg.setAttribute("fill",C.red); }
+    else{ R.s4msg.textContent="3 shares → exactly one key ✓"; R.s4msg.setAttribute("fill",C.green); }
+    setop(R.s4msg, Math.max(win(t,A0,B0,400), inn(t,B0,400)));
+  }
+
+  // ===== SCENE 5 : close =====
+  (function(){
+    const g=$("s5");
+    const v=vault(g,640,320,2.4); R.s5shackle=v.shackle;
+    R.s5rays=el("g",{opacity:0},g);
+    for(let i=0;i<12;i++){
+      const a=i*Math.PI/6;
+      el("line",{x1:640+Math.cos(a)*70,y1:300+Math.sin(a)*70,x2:640+Math.cos(a)*120,y2:300+Math.sin(a)*120,
+        stroke:C.amber2,"stroke-width":4,"stroke-linecap":"round"},R.s5rays);
+    }
+    R.s5open=el("text",{x:640,y:150,"text-anchor":"middle",fill:C.green,"font-size":26,"font-weight":800},g); R.s5open.textContent="OPEN";
+    R.s5line=el("text",{x:640,y:560,"text-anchor":"middle",fill:C.ink,"font-size":27,"font-weight":700},g);
+    R.s5line.textContent="Opens only when you can't respond —";
+    R.s5sub=el("text",{x:640,y:600,"text-anchor":"middle",fill:C.muted,"font-size":18},g);
+    R.s5sub.textContent="and never for fewer than K of your N trustees.";
+  })();
+  function upd5(t){
+    const k=easeOut(clamp((t-500)/1200,0,1));
+    R.s5shackle.setAttribute("transform",`rotate(${lerp(0,-32,k)} 616 250) translate(0 ${lerp(0,-10,k)})`);
+    setop(R.s5rays, inn(t,1400,700)*(.6+.4*Math.abs(Math.sin(t/400))));
+    setop(R.s5open, inn(t,1400,600));
+    setop(R.s5line, inn(t,2600,700));
+    setop(R.s5sub, inn(t,3300,700));
+  }
+
+  // ===== TIMELINE =====
+  const SCENES=[
+    {g:$("s1"),dur:8000, label:"The problem", upd:upd1},
+    {g:$("s2"),dur:12000,label:"The check-in loop", upd:upd2},
+    {g:$("s3"),dur:12000,label:"Silence", upd:upd3},
+    {g:$("s4"),dur:18000,label:"Splitting the key", upd:upd4},
+    {g:$("s5"),dur:10000,label:"The guarantee", upd:upd5},
+  ];
+  const CAPTIONS=[
+    'You hold secrets worth protecting. Two bad options: <b>expose them now</b> — or <b>lose them forever</b>.',
+    'So Aegis asks you to <b>check in</b>. Every check-in resets the clock. The vault stays <b>sealed</b>.',
+    'But if you fall silent… <b>Active → Warning → Grace → Released</b>. The countdown runs out.',
+    'Your key splits into <b>5 shares</b>. Any <b>2 reveal nothing</b> — any <b>3 rebuild the key</b>.',
+    'Aegis <b>never opens early</b> — and never trusts any <b>single</b> person alone.'
+  ];
+  let start=null, T=0, raf=null;
+  const TOTAL=SCENES.reduce((a,s)=>a+s.dur,0);
+  const STARTS=[]; { let acc=0; for(const s of SCENES){STARTS.push(acc); acc+=s.dur;} }
+
+  function frame(ts){
+    if(start===null) start=ts;
+    T=ts-start;
+    for(let i=0;i<SCENES.length;i++){
+      const s=SCENES[i], st=STARTS[i], en=st+s.dur;
+      const op=win(T,st,en,320);
+      s.g.style.opacity=op;
+      s.g.style.display = op>0.001?"block":"none";
+      if(T>=st-350 && T<=en+350) s.upd(T-st, s.dur);
+    }
+    let ci=0; for(let i=0;i<STARTS.length;i++){ if(T>=STARTS[i]) ci=i; }
+    const cap=$("caption");
+    if(cap.dataset.i!=String(ci)){ cap.dataset.i=String(ci); cap.innerHTML=CAPTIONS[ci]; }
+    cap.style.opacity=win(T-STARTS[ci],0,SCENES[ci].dur,400);
+    $("bar").style.width=(100*clamp(T/TOTAL,0,1))+"%";
+    $("slabel").textContent = T<TOTAL? SCENES[ci].label : "Replay ↻";
+    if(T<TOTAL+400){ raf=requestAnimationFrame(frame); } else { finish(); }
+  }
+  function finish(){
+    $("replay").classList.add("pulse");
+    const last=SCENES[SCENES.length-1];
+    last.g.style.display="block"; last.g.style.opacity=1; last.upd(last.dur,last.dur);
+  }
+  function play(){
+    if(raf) cancelAnimationFrame(raf);
+    start=null; $("replay").classList.remove("pulse");
+    raf=requestAnimationFrame(frame);
+  }
+  $("replay").addEventListener("click",play);
+  if(document.readyState!=="loading") play();
+  else document.addEventListener("DOMContentLoaded",play);
+})();
+</script>
+</body>
+</html>
