@@ -151,19 +151,21 @@ Aegis v1 is a web application with a Python/FastAPI backend and a React
 frontend. It provides:
 \begin{itemize}[leftmargin=0.7cm]
   \item account registration and authentication for Owners;
-  \item creation of a single vault per Owner and upload of an encrypted
-    payload;
+  \item creation of a single vault per Owner; the payload is encrypted \emph{in
+    the Owner's browser} and uploaded as ciphertext only;
   \item configuration of a check-in interval and a grace period;
-  \item designation of $N$ trustees and a threshold $K$ ($1 \le K \le N$);
+  \item designation of $N$ trustees (each enrolling a public key) and a
+    threshold $K$ ($1 \le K \le N$);
   \item a scheduler that issues check-in prompts and, on missed check-in past
-    the grace period, distributes key shares to trustees;
+    the grace period, distributes each trustee's encrypted share blob;
   \item a one-action check-in confirmation for the Owner;
-  \item trustee-side submission of $K$ shares to reconstruct the key and
-    decrypt the payload.
+  \item client-side reconstruction: any $K$ trustees decrypt their blobs and
+    combine shares in the browser to recover the key and decrypt the payload.
 \end{itemize}
 The algorithmic core is a hand-written implementation of \emph{Shamir's Secret
 Sharing} (SSS) over a finite field, together with symmetric encryption of the
-payload under the shared key.
+payload under the shared key --- all performed \textbf{client-side} (see the
+Trust model).
 
 \subsection{Non-goals \BvrHint{\ldots explicit exclusions for v1}}
 The following are \textbf{explicitly out of scope} for v1 and must not be
