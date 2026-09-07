@@ -5,7 +5,7 @@
 
 # Aegis — an encrypted "dead man's switch" legacy vault
 
-**Author:** Pratham Arora (Roll No. `1024030001`, COE) — `parora_be24@thapar.edu`
+**Authors:** Pratham Arora, Krishna Pandey, Nipun Behl (COE)
 
 Aegis lets an **Owner** store encrypted files and messages in a **vault** and
 designate **trustees** who can open it *only if the Owner stops responding*. The
@@ -18,8 +18,9 @@ distributed to the trustees, who together open the vault.
 
 | Page | What it covers |
 | --- | --- |
-| [Software Requirements Specification](srs/index.md) | Purpose, scope, non-goals, glossary, functional (`FR-*`) and non-functional (`NFR-*`) requirements, assumptions & constraints. |
-| [Diagrams](diagrams/index.md) | Use-case, vault-lifecycle state machine, and high-level architecture. |
+| [Software Requirements Specification](srs/index.md) | Purpose, scope, non-goals, glossary, the **trust model**, functional (`FR-*`) and non-functional (`NFR-*`) requirements, assumptions & constraints. |
+| [Threat model](threat-model.md) | Per-threat analysis (capability, impact, mitigation, covering `FR`/`NFR`) and an honest **residual-risks** section. |
+| [Diagrams](diagrams/index.md) | Use-case, vault-lifecycle state machine, and the high-level architecture with its **client/server trust boundary**. |
 | [12-Week Plan](plan/twelve-week-plan.md) | Week-by-week roadmap for the UCS503P timeline. |
 | [Project selection criteria](criteria-for-project-selection.md) | Course guidance the project is measured against. |
 

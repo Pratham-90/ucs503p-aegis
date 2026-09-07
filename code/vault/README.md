@@ -10,9 +10,9 @@ directly.
 | --- | --- |
 | `Owner` | Registered user who owns a vault. One vault per Owner in v1. |
 | `Vault` | The container. Holds lifecycle state + timing configuration. |
-| `Payload` | Encrypted blob (ciphertext) + metadata (filename, size, MIME). |
-| `Trustee` | A designated recipient of a key share. |
-| `Share` | One Shamir share, distributed to a trustee on release. |
+| `Payload` | **Client-encrypted** ciphertext + non-secret metadata (filename, size, MIME). The server never sees the plaintext. |
+| `Trustee` | A designated recipient; holds an **enrolled public key** (private key stays on their device). |
+| `ShareBlob` | One Shamir share **encrypted under a trustee's public key**, stored server-side and delivered on release. The server never sees the plaintext share. |
 | `CheckIn` | A recorded, confirmed check-in event with a timestamp. |
 
 ## Responsibilities
@@ -21,8 +21,10 @@ directly.
   per Owner).
 - Expose repositories (`OwnerRepository`, `VaultRepository`, …) as the only
   persistence entry points.
-- Guarantee the payload is stored **as ciphertext only** — the plaintext key
-  is never written to the database (NFR-SEC-1).
+- Guarantee that everything persisted is **ciphertext or an encrypted blob** —
+  the payload as client-side ciphertext, each share as a trustee-encrypted
+  `ShareBlob`, and never the plaintext key or a plaintext share
+  (`NFR-SEC-1`, `NFR-SEC-5`).
 
 ## Status
 
