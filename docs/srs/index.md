@@ -28,17 +28,20 @@ that design, code, and tests can cite what they satisfy.
 A web application — Python/FastAPI backend, React frontend — providing:
 
 - Owner registration and authentication.
-- Creation of a single vault per Owner and upload of an encrypted payload.
+- Creation of a single vault per Owner; the payload is encrypted **in the
+  Owner's browser** and uploaded as ciphertext only.
 - Configuration of a check-in interval and a grace period.
-- Designation of `N` trustees and a threshold `K` (`1 ≤ K ≤ N`).
+- Designation of `N` trustees (each enrolling a public key) and a threshold `K`
+  (`1 ≤ K ≤ N`).
 - A scheduler that prompts for check-ins and, on missed check-in past the grace
-  period, distributes key shares.
+  period, distributes each trustee's **encrypted share blob**.
 - A one-action check-in confirmation.
-- Trustee submission of `K` shares to reconstruct the key and decrypt the
-  payload.
+- **Client-side reconstruction:** any `K` trustees decrypt their blobs and
+  combine shares in the browser to recover the key and decrypt the payload.
 
 The algorithmic core is a hand-written implementation of **Shamir's Secret
-Sharing** over a finite field, plus symmetric encryption of the payload.
+Sharing** over a finite field, plus symmetric encryption of the payload — all
+performed **client-side** (see the [Trust model](#23-trust-model)).
 
 ### 2.2 Non-goals (explicit exclusions for v1)
 
@@ -47,6 +50,31 @@ Sharing** over a finite field, plus symmetric encryption of the payload.
 | **NG-1** | **No SMS.** Notifications are email (SMTP) only. |
 | **NG-2** | **No mobile app.** Responsive web only; no native client. |
 | **NG-3** | **Single vault per user.** One vault per Owner in v1. |
+
+### 2.3 Trust model
+
+Aegis adopts a **zero-knowledge server** design: the server is trusted for
+**scheduling and availability**, and **never for confidentiality**. All payload
+cryptography — key generation, encryption, Shamir splitting, and reconstruction
+— runs on clients (the Owner's and trustees' browsers). The server persists only
+the ciphertext payload, the `N` trustee-encrypted share blobs, and non-secret
+metadata (`FR-2`, `FR-2a`, `NFR-SEC-5`).
+
+The boundary and its honest consequences:
+
+- **The server alone can never read a payload.** A confidentiality breach
+  requires the server **and** at least `K` trustees.
+- **The server controls release timing.** It could release blobs early or refuse
+  to release. Early release still yields plaintext only if `≥ K` trustees then
+  collude; denial of release is an *availability* failure, not a confidentiality
+  one (see threat [`T-7`](../threat-model.md)).
+- **Client code is server-delivered.** The zero-knowledge property holds against
+  a *passive/storage* compromise of the server, **not** against a malicious
+  server that serves backdoored client code (which could exfiltrate the key at
+  encryption time). This residual risk is **not mitigated in v1** (see threat
+  [`T-4`](../threat-model.md)).
+
+The full per-threat analysis is in the [threat model](../threat-model.md).
 
 ## 3. Glossary
 
@@ -78,13 +106,14 @@ action. The accompanying models (Mermaid diagrams):
 | ID | Requirement |
 | --- | --- |
 | **FR-1** | **Registration & authentication.** Register an Owner (email + password) and authenticate returning Owners before any vault operation. Passwords never stored in plaintext (see `NFR-SEC-3`). |
-| **FR-2** | **Vault creation & payload upload.** An authenticated Owner creates their single vault and uploads a payload (files/message); it is encrypted and persisted only as ciphertext (see `NFR-SEC-1`). |
+| **FR-2** | **Vault creation & client-side payload encryption.** An authenticated Owner creates their single vault; the payload (files/message) is encrypted **in the browser** under a locally generated symmetric key, and only the ciphertext + non-secret metadata are uploaded. The server never receives the plaintext payload or the key (see `NFR-SEC-1`, `NFR-SEC-5`). |
+| **FR-2a** | **Client-side key splitting & share encryption.** In the browser, the symmetric key is split into `N` Shamir shares (threshold `K`, per `FR-4`); each share is then encrypted under its trustee's enrolled public key. The server receives only the `N` trustee-encrypted share blobs — never a plaintext share or the key (see `NFR-SEC-5`). |
 | **FR-3** | **Timing configuration.** The Owner sets the check-in interval and the grace period (positive durations; grace may be zero only if explicitly chosen). |
-| **FR-4** | **Trustee designation & threshold.** The Owner designates `N ≥ 1` trustees and sets `K` with `1 ≤ K ≤ N`; on confirmation the key is split into `N` Shamir shares with threshold `K`. |
+| **FR-4** | **Trustee designation, enrolment & threshold.** The Owner designates `N ≥ 1` trustees (by email) and sets `K` with `1 ≤ K ≤ N`. Each trustee enrols a **public key** whose private key is generated on, and never leaves, their own device; these public keys are the inputs to the client-side split (`FR-2a`). The key is never split or held server-side. |
 | **FR-5** | **Scheduled check-in prompts.** At each interval boundary the Scheduler moves the vault to *Warning* and emails a check-in prompt (see `NFR-PERF-2`). |
 | **FR-6** | **One-action check-in confirmation.** The Owner confirms a check-in with a single action (one click on a tokenised link), resetting the timer and returning the vault to *Active*. |
-| **FR-7** | **Share distribution on expiry.** Only if no valid check-in is confirmed before the deadline **and** the grace period have both elapsed does the Scheduler move the vault to *Released* and email one share to each trustee (see `NFR-REL-1`). |
-| **FR-8** | **K-of-N reconstruction & decryption.** After release, the system accepts trustee-submitted shares; on any `K` valid shares it reconstructs the key and decrypts the payload. Fewer than `K` cannot decrypt. |
+| **FR-7** | **Blob distribution on expiry.** Only if no valid check-in is confirmed before the deadline **and** the grace period have both elapsed does the Scheduler move the vault to *Released* and deliver to each trustee their own encrypted share blob (already encrypted to them at upload, per `FR-2a`) — only then (see `NFR-REL-1`). The server distributes blobs; it never holds a plaintext share. |
+| **FR-8** | **Client-side K-of-N reconstruction & decryption.** After release, each trustee decrypts their blob locally with their private key to recover their share; any `K` trustees combine shares **in the browser** to reconstruct the key and decrypt the payload. Fewer than `K` cannot decrypt. The server performs no decryption and never sees a plaintext share, the key, or the payload (see `NFR-SEC-5`). |
 
 ## 6. Non-Functional Requirements
 
@@ -100,10 +129,11 @@ action. The accompanying models (Mermaid diagrams):
 
 | ID | Requirement & measurable criterion |
 | --- | --- |
-| **NFR-SEC-1** | **Payload never in plaintext.** Only ciphertext + non-secret metadata (filename, size, MIME) is persisted. *Measure:* automated inspection of DB and file store finds no plaintext payload; the plaintext key lives only transiently in memory. |
+| **NFR-SEC-1** | **Payload never in plaintext.** Only ciphertext + non-secret metadata (filename, size, MIME) is persisted. *Measure:* automated inspection of DB and file store finds no plaintext payload; the plaintext key lives only transiently in **client** memory (Owner's browser at encryption, a trustee's browser at reconstruction) and never on the server (see `NFR-SEC-5`). |
 | **NFR-SEC-2** | **Threshold secrecy.** Any `≤ K−1` shares reveal no information about the key. *Measure:* property tests show every `K−1` subset is consistent with all possible secrets (intrinsic to SSS). |
 | **NFR-SEC-3** | **Credential protection.** Passwords stored only as salted hashes via a memory-hard function (Argon2/bcrypt). |
 | **NFR-SEC-4** | **Transport security.** All client–server traffic over HTTPS/TLS in deployed environments. |
+| **NFR-SEC-5** | **Zero-knowledge server.** The server shall at no point possess sufficient material to decrypt a payload unaided. *Measure:* inspecting everything the server persists or receives (DB rows, uploaded objects, request logs) finds, per vault, only the ciphertext payload, the `N` trustee-public-key-encrypted share blobs, and non-secret metadata — no plaintext payload, no key, no plaintext share. Decryption requires material held only by clients and by `≥ K` trustees, never the server alone. See the [Trust model](#23-trust-model) and [threat model](../threat-model.md). |
 
 ### 6.3 Performance, usability, maintainability
 
@@ -139,4 +169,7 @@ action. The accompanying models (Mermaid diagrams):
 The IDs above are cited in the module docs (`code/*/README.md`) and will be
 cited by tests as they are written — giving a requirement → module → test
 trace. The lifecycle behind `FR-5`–`FR-7` and `NFR-REL-1` is specified by the
-[vault lifecycle state diagram](../diagrams/vault-lifecycle.md).
+[vault lifecycle state diagram](../diagrams/vault-lifecycle.md). The trust
+boundary and per-threat coverage are analysed in the
+[threat model](../threat-model.md), whose mitigations cite these same
+identifiers.

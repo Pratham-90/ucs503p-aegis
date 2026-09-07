@@ -217,6 +217,32 @@ SRS and are maintained as Mermaid diagrams in the project documentation:
     \texttt{docs/diagrams/architecture.md}.
 \end{itemize}
 
+\section{Trust model \BvrHint{\ldots who is trusted for what}}
+Aegis adopts a \textbf{zero-knowledge server} design: the server is trusted for
+\emph{scheduling and availability}, and \textbf{never for confidentiality}. All
+payload cryptography --- symmetric-key generation, payload encryption, Shamir
+splitting, and reconstruction --- is performed on clients (the Owner's and the
+trustees' browsers). The server persists only the ciphertext payload, the $N$
+trustee-encrypted share blobs, and non-secret metadata (\ReqID{FR-2},
+\ReqID{FR-2a}, \ReqID{NFR-SEC-5}).
+
+The boundary and its honest consequences:
+\begin{itemize}[leftmargin=0.7cm]
+  \item \textbf{The server alone can never read a payload.} A confidentiality
+    breach requires the server \emph{and} at least $K$ trustees.
+  \item \textbf{The server controls release timing.} It could hand over blobs
+    early or refuse to release altogether. Early release nonetheless yields
+    plaintext only if $\ge K$ trustees then collude; denial of release is an
+    availability failure, not a confidentiality one (threat \texttt{T-7}).
+  \item \textbf{Client code is server-delivered.} The zero-knowledge property
+    holds against a passive or storage compromise of the server. It does
+    \emph{not} hold against a malicious server that serves backdoored client
+    code, which could exfiltrate the key at encryption time. This residual risk
+    is stated plainly and is \textbf{not} mitigated in v1 (threat \texttt{T-4}).
+\end{itemize}
+The full per-threat analysis --- capabilities, impact, mitigation, and residual
+risk --- is maintained in \texttt{docs/threat-model.md}.
+
 \section{Functional Requirements
   \BvrHint{\ldots traceable \ReqID{FR-\textit{n}}}}
 \begin{description}[leftmargin=0cm,style=nextline]
@@ -225,19 +251,30 @@ SRS and are maintained as Mermaid diagrams in the project documentation:
     authenticate returning Owners. Credentials shall be verified before any
     vault operation. Passwords are never stored in plaintext (see
     \ReqID{NFR-SEC-3}).
-  \item[\ReqID{FR-2} Vault creation \& payload upload.] An authenticated Owner
-    shall be able to create their (single) vault and upload a payload (files
-    and/or a text message). The payload shall be encrypted client- or
-    server-side and persisted only as ciphertext (see \ReqID{NFR-SEC-1}).
+  \item[\ReqID{FR-2} Vault creation \& client-side payload encryption.] An
+    authenticated Owner shall be able to create their (single) vault. The
+    payload (files and/or a text message) shall be encrypted \textbf{in the
+    Owner's browser} under a locally generated symmetric key; only the resulting
+    ciphertext and non-secret metadata are uploaded. The server shall never
+    receive the plaintext payload or the symmetric key (see \ReqID{NFR-SEC-1},
+    \ReqID{NFR-SEC-5}).
+  \item[\ReqID{FR-2a} Client-side key splitting \& share encryption.] In the
+    Owner's browser, the symmetric key shall be split into $N$ Shamir shares
+    with threshold $K$ (\ReqID{FR-4}); each share shall then be encrypted under
+    its designated trustee's enrolled public key before upload. The server shall
+    receive only the $N$ trustee-encrypted share blobs --- never a plaintext
+    share or the key (see \ReqID{NFR-SEC-5}).
   \item[\ReqID{FR-3} Timing configuration.] The Owner shall configure the
     \emph{check-in interval} (how often they must check in) and the
     \emph{grace period} (additional time after a missed check-in before
     release). Both are positive durations; the grace period may be zero only
     if explicitly chosen.
-  \item[\ReqID{FR-4} Trustee designation \& threshold.] The Owner shall
-    designate $N \ge 1$ trustees (by email) and set a threshold $K$ with
-    $1 \le K \le N$. On confirmation, the system shall split the vault key into
-    $N$ Shamir shares with threshold $K$.
+  \item[\ReqID{FR-4} Trustee designation, enrolment \& threshold.] The Owner
+    shall designate $N \ge 1$ trustees (by email) and set a threshold $K$ with
+    $1 \le K \le N$. Each designated trustee shall enrol a \emph{public key}
+    whose corresponding private key is generated on, and never leaves, the
+    trustee's own device. These public keys are the inputs to the client-side
+    split (\ReqID{FR-2a}); the key is therefore never split or held server-side.
   \item[\ReqID{FR-5} Scheduled check-in prompts.] The Scheduler shall, at each
     interval boundary, transition the vault to \emph{Warning} and prompt the
     Owner to check in via email (see \ReqID{NFR-PERF-2}).
@@ -245,15 +282,20 @@ SRS and are maintained as Mermaid diagrams in the project documentation:
     to confirm a check-in with a single action (one click on a tokenised link
     or button), which resets the release timer and returns the vault to
     \emph{Active}.
-  \item[\ReqID{FR-7} Share distribution on expiry.] If no valid check-in is
+  \item[\ReqID{FR-7} Blob distribution on expiry.] If no valid check-in is
     confirmed before the interval deadline \emph{and} the grace period have
     both elapsed, the Scheduler shall transition the vault to \emph{Released}
-    and distribute one share to each trustee by email --- and shall do so
-    \textbf{only then} (see \ReqID{NFR-REL-1}).
-  \item[\ReqID{FR-8} $K$-of-$N$ reconstruction \& decryption.] After release,
-    the system shall accept shares submitted by trustees and, upon receiving
-    any $K$ valid shares, reconstruct the key and decrypt the payload for
-    retrieval. Fewer than $K$ shares shall not permit decryption.
+    and deliver to each trustee their own encrypted share blob (already
+    encrypted to that trustee at upload, per \ReqID{FR-2a}) --- and shall do so
+    \textbf{only then} (see \ReqID{NFR-REL-1}). The server distributes blobs; it
+    never holds a plaintext share.
+  \item[\ReqID{FR-8} Client-side $K$-of-$N$ reconstruction \& decryption.] After
+    release, each trustee shall decrypt their blob locally with their private key
+    to recover their plaintext share. Any $K$ trustees shall then combine shares
+    \textbf{in the browser} to reconstruct the symmetric key and decrypt the
+    payload; fewer than $K$ shall not permit decryption. The server performs no
+    decryption and at no point sees a plaintext share, the key, or the payload
+    (see \ReqID{NFR-SEC-5}).
 \end{description}
 
 \section{Non-Functional Requirements
@@ -285,8 +327,9 @@ SRS and are maintained as Mermaid diagrams in the project documentation:
     be persisted in plaintext; only ciphertext plus non-secret metadata
     (filename, size, MIME type) may be stored. \emph{Measure:} an automated
     inspection of the database and file store finds no plaintext payload for
-    any vault; the plaintext key exists only transiently in memory during
-    encryption and reconstruction.
+    any vault; the plaintext key exists only transiently in \emph{client} memory
+    (the Owner's browser at encryption, a trustee's browser at reconstruction)
+    and never on the server (see \ReqID{NFR-SEC-5}).
   \item[\ReqID{NFR-SEC-2} Threshold secrecy.] Any set of at most $K-1$ shares
     shall reveal no information about the key. \emph{Measure:} property tests
     confirm that all $\binom{N}{K-1}$ share subsets are statistically
@@ -296,6 +339,15 @@ SRS and are maintained as Mermaid diagrams in the project documentation:
     \emph{Measure:} no reversible or plaintext credential appears in storage.
   \item[\ReqID{NFR-SEC-4} Transport security.] All client--server traffic shall
     be over HTTPS/TLS in any deployed environment.
+  \item[\ReqID{NFR-SEC-5} Zero-knowledge server.] The server shall at no point
+    possess sufficient material to decrypt a payload unaided. \emph{Measure:} an
+    inspection of everything the server persists or receives (database rows,
+    uploaded objects, request logs) finds, for every vault, only the ciphertext
+    payload, the $N$ trustee-public-key-encrypted share blobs, and non-secret
+    metadata --- no plaintext payload, no symmetric key, and no plaintext share.
+    Decryption therefore requires material held only by clients and by $\ge K$
+    trustees, never by the server alone (see the Trust model, and
+    \texttt{docs/threat-model.md}).
 \end{description}
 
 \subsection{Performance, usability, and maintainability}
@@ -345,6 +397,8 @@ in the module documentation (\texttt{code/*/README.md}) and will be cited by
 the corresponding tests as they are written, giving a requirement
 $\rightarrow$ module $\rightarrow$ test trace. The vault lifecycle referenced
 by \ReqID{FR-5}--\ReqID{FR-7} and \ReqID{NFR-REL-1} is specified by the state
-diagram in \texttt{docs/diagrams/vault-lifecycle.md}.
+diagram in \texttt{docs/diagrams/vault-lifecycle.md}. The trust boundary and
+per-threat coverage are analysed in \texttt{docs/threat-model.md}, whose
+mitigations cite these same identifiers.
 
 \end{document}
