@@ -7,26 +7,19 @@ early (`NFR-REL-1`).
 ```mermaid
 stateDiagram-v2
     direction LR
+
+    state "Active — within the interval, next check-in not yet due" as Active
+    state "Warning — check-in due, prompt and reminders sent (FR-5)" as Warning
+    state "Grace — deadline missed, grace period counting down" as Grace
+    state "Released — grace expired, encrypted blobs distributed" as Released
+
     [*] --> Active : vault created / arm timer
-
-    Active : Active
-    Active : Within the interval; next check-in not yet due.
-
-    Warning : Warning
-    Warning : Check-in due; prompt & reminders sent (FR-5).
-
-    Grace : Grace
-    Grace : Deadline missed; final grace period counting down.
-
-    Released : Released
-    Released : Grace expired; shares distributed to trustees.
-
     Active --> Warning : interval elapses / send prompt (FR-5)
     Warning --> Active : Owner confirms check-in (FR-6) / reset timer
-    Warning --> Grace : check-in deadline passes, no confirmation / start grace
+    Warning --> Grace : deadline passes, no confirmation / start grace
     Grace --> Active : Owner confirms check-in (FR-6) / reset timer
-    Grace --> Released : grace period expires, no confirmation / distribute shares (FR-7)
-    Released --> [*] : trustees reconstruct & decrypt (FR-8)
+    Grace --> Released : grace expires, no confirmation / distribute encrypted blobs (FR-7)
+    Released --> [*] : trustees decrypt blobs, reconstruct and decrypt (FR-8)
 ```
 
 ## Transition table
@@ -38,8 +31,8 @@ stateDiagram-v2
 | Warning | Active | Owner confirms check-in | One-action confirm (`FR-6`); reset timer. |
 | Warning | Grace | Check-in deadline passes, still unconfirmed | Begin the grace-period countdown. |
 | Grace | Active | Owner confirms check-in | One-action confirm (`FR-6`); reset timer. |
-| Grace | Released | Grace period expires, still unconfirmed | Distribute one share per trustee (`FR-7`). |
-| Released | *(end)* | Trustees combine `K` shares | Reconstruct key, decrypt payload (`FR-8`). |
+| Grace | Released | Grace period expires, still unconfirmed | Distribute one encrypted blob per trustee (`FR-7`). |
+| Released | *(end)* | Trustees decrypt blobs, combine `K` shares | Reconstruct key, decrypt payload — all client-side (`FR-8`). |
 
 ## The safety gate
 
