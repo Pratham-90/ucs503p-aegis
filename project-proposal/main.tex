@@ -155,7 +155,7 @@ frontend. It provides:
     the Owner's browser} and uploaded as ciphertext only;
   \item configuration of a check-in interval and a grace period;
   \item designation of $N$ trustees (each enrolling a public key) and a
-    threshold $K$ ($1 \le K \le N$);
+    threshold $K$ ($2 \le K \le N$);
   \item a scheduler that issues check-in prompts and, on missed check-in past
     the grace period, distributes each trustee's encrypted share blob;
   \item a one-action check-in confirmation for the Owner;
@@ -273,10 +273,15 @@ risk --- is maintained in \texttt{docs/threat-model.md}.
     if explicitly chosen.
   \item[\ReqID{FR-4} Trustee designation, enrolment \& threshold.] The Owner
     shall designate $N \ge 1$ trustees (by email) and set a threshold $K$ with
-    $1 \le K \le N$. Each designated trustee shall enrol a \emph{public key}
+    $2 \le K \le N$. Each designated trustee shall enrol a \emph{public key}
     whose corresponding private key is generated on, and never leaves, the
-    trustee's own device. These public keys are the inputs to the client-side
-    split (\ReqID{FR-2a}); the key is therefore never split or held server-side.
+    trustee's own device; these public keys are the inputs to the client-side
+    split (\ReqID{FR-2a}), so the key is never split or held server-side. On the
+    threshold the system shall \textbf{reject} any configuration with $K < 2$ (a
+    single trustee must never suffice), shall \textbf{warn} the Owner when
+    $K = N$ that the vault becomes unrecoverable if any one trustee is lost, and
+    the configuration UI shall \textbf{display} the loss tolerance $N - K$ (the
+    number of trustees that may be lost while the vault stays recoverable).
   \item[\ReqID{FR-5} Scheduled check-in prompts.] The Scheduler shall, at each
     interval boundary, transition the vault to \emph{Warning} and prompt the
     Owner to check in via email (see \ReqID{NFR-PERF-2}).

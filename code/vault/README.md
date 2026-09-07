@@ -17,8 +17,8 @@ directly.
 
 ## Responsibilities
 
-- Model the domain and its invariants (e.g. `1 <= K <= N`, one active vault
-  per Owner).
+- Model the domain and its invariants (e.g. `2 <= K <= N` (FR-4), one active
+  vault per Owner).
 - Expose repositories (`OwnerRepository`, `VaultRepository`, …) as the only
   persistence entry points.
 - Guarantee that everything persisted is **ciphertext or an encrypted blob** —

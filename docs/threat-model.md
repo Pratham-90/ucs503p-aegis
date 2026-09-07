@@ -24,7 +24,7 @@ rather than written as if solved.
 
 | ID | Threat | Attacker capability | Impact | Mitigation | Covered by | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| **T-1** | Malicious single trustee | Controls one trustee account + device; decrypts their own blob to one plaintext share | **None alone** — one share is below threshold and reveals nothing about the key (information-theoretic) | Shamir threshold: any `≤ K−1` shares reveal nothing | `FR-2a`, `FR-4`, `NFR-SEC-2` | Mitigated (for `K ≥ 2`) |
+| **T-1** | Malicious single trustee | Controls one trustee account + device; decrypts their own blob to one plaintext share | **None alone** — one share is below threshold and reveals nothing about the key (information-theoretic) | Shamir threshold: any `≤ K−1` shares reveal nothing; `FR-4` enforces `K ≥ 2` so one trustee never suffices | `FR-2a`, `FR-4`, `NFR-SEC-2` | Mitigated |
 | **T-2** | Colluding trustees (`≥ K`) | `K` or more trustees pool their decrypted shares | **Full payload disclosure** | **Partial only.** This *is* the intended recovery path, so it cannot be prevented cryptographically; a larger `K` only raises the bar | `FR-4` (choice of `K`); `NFR-SEC-2` bounds only `< K` | **Not mitigated for `≥ K` (by design)** |
 | **T-3** | Server compromise (passive / storage exfiltration) | Reads everything at rest: ciphertext payload, `N` trustee-encrypted blobs, metadata, backups | **Cannot decrypt** — all payload material is ciphertext or encrypted to trustees' public keys; would additionally need `≥ K` trustee private keys | Zero-knowledge storage: client-side crypto, per-trustee public-key share encryption | `FR-2`, `FR-2a`, `NFR-SEC-1`, `NFR-SEC-5` | Mitigated (payload); **metadata leaks — see T-3 residual** |
 | **T-4** | Malicious operator / active server (incl. backdoored client code) | Full control of the running server: read storage, alter responses, **serve modified client JavaScript**, control release timing | Cannot read *existing* payloads from storage (as T-3), **but** can serve backdoored client code that exfiltrates the key/plaintext at encryption or reconstruction time → *future* payloads compromised; can also force early blob release | **Partial.** Zero-knowledge holds against passive/storage compromise, **not** against code-delivery tampering. TLS (`NFR-SEC-4`) protects transit only | `NFR-SEC-4` (transit); otherwise residual | **Code-delivery vector NOT mitigated in v1** |
@@ -55,16 +55,15 @@ inherent. They must be weighed before the system is relied upon:
 4. **Metadata confidentiality (T-3).** Filenames, sizes, MIME types, trustee
    email addresses, and the check-in schedule are stored **unencrypted** and
    leak on server compromise. Only the payload and shares are protected.
-5. **Configuration foot-guns.** `K = 1` lets any single trustee open the vault
-   (defeating distributed trust); `K = N` makes one lost or unreachable trustee
-   fatal to recovery. v1 does not yet enforce sane defaults or warn on these.
-6. **Recovery availability.** If more than `N − K` trustees lose their private
+5. **Recovery availability.** If more than `N − K` trustees lose their private
    keys or become unreachable, the vault is **permanently unrecoverable** — the
-   unavoidable flip side of requiring `K` cooperating parties.
-7. **Share integrity (T-9).** Verifiable secret sharing / share authentication
+   unavoidable flip side of requiring `K` cooperating parties. `FR-4` now warns
+   the Owner at `K = N` and displays the `N − K` loss tolerance, but cannot
+   remove the underlying trade-off.
+6. **Share integrity (T-9).** Verifiable secret sharing / share authentication
    is deferred to Week 4; until then a tampered share can silently corrupt a
    reconstruction rather than being rejected.
-8. **Sustained check-in suppression (T-5 + T-8).** An attacker with ongoing
+7. **Sustained check-in suppression (T-5 + T-8).** An attacker with ongoing
    control of the Owner's email could keep confirming check-ins to suppress a
    legitimate release indefinitely.
 

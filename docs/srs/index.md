@@ -32,7 +32,7 @@ A web application — Python/FastAPI backend, React frontend — providing:
   Owner's browser** and uploaded as ciphertext only.
 - Configuration of a check-in interval and a grace period.
 - Designation of `N` trustees (each enrolling a public key) and a threshold `K`
-  (`1 ≤ K ≤ N`).
+  (`2 ≤ K ≤ N`).
 - A scheduler that prompts for check-ins and, on missed check-in past the grace
   period, distributes each trustee's **encrypted share blob**.
 - A one-action check-in confirmation.
@@ -109,7 +109,7 @@ action. The accompanying models (Mermaid diagrams):
 | **FR-2** | **Vault creation & client-side payload encryption.** An authenticated Owner creates their single vault; the payload (files/message) is encrypted **in the browser** under a locally generated symmetric key, and only the ciphertext + non-secret metadata are uploaded. The server never receives the plaintext payload or the key (see `NFR-SEC-1`, `NFR-SEC-5`). |
 | **FR-2a** | **Client-side key splitting & share encryption.** In the browser, the symmetric key is split into `N` Shamir shares (threshold `K`, per `FR-4`); each share is then encrypted under its trustee's enrolled public key. The server receives only the `N` trustee-encrypted share blobs — never a plaintext share or the key (see `NFR-SEC-5`). |
 | **FR-3** | **Timing configuration.** The Owner sets the check-in interval and the grace period (positive durations; grace may be zero only if explicitly chosen). |
-| **FR-4** | **Trustee designation, enrolment & threshold.** The Owner designates `N ≥ 1` trustees (by email) and sets `K` with `1 ≤ K ≤ N`. Each trustee enrols a **public key** whose private key is generated on, and never leaves, their own device; these public keys are the inputs to the client-side split (`FR-2a`). The key is never split or held server-side. |
+| **FR-4** | **Trustee designation, enrolment & threshold.** The Owner designates `N ≥ 1` trustees (by email) and sets `K` with `2 ≤ K ≤ N`. Each trustee enrols a **public key** whose private key is generated on, and never leaves, their own device; these public keys are the inputs to the client-side split (`FR-2a`), so the key is never split or held server-side. The system **shall reject** any `K < 2` (a single trustee must never suffice), **shall warn** the Owner when `K = N` that the vault is unrecoverable if any one trustee is lost, and the config UI **shall display** the loss tolerance `N − K`. |
 | **FR-5** | **Scheduled check-in prompts.** At each interval boundary the Scheduler moves the vault to *Warning* and emails a check-in prompt (see `NFR-PERF-2`). |
 | **FR-6** | **One-action check-in confirmation.** The Owner confirms a check-in with a single action (one click on a tokenised link), resetting the timer and returning the vault to *Active*. |
 | **FR-7** | **Blob distribution on expiry.** Only if no valid check-in is confirmed before the deadline **and** the grace period have both elapsed does the Scheduler move the vault to *Released* and deliver to each trustee their own encrypted share blob (already encrypted to them at upload, per `FR-2a`) — only then (see `NFR-REL-1`). The server distributes blobs; it never holds a plaintext share. |
