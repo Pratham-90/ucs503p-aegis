@@ -1,0 +1,48 @@
+{
+  "requirement_cadence": {
+    "cadence": "requirement",
+    "schedules": 1000,
+    "seed": 2026,
+    "early_releases": 0,
+    "early_release_examples": [],
+    "duplicate_releases": 0,
+    "releases_with_wrong_email_count": 0,
+    "missed_releases": 0,
+    "max_lateness_s": 56.349,
+    "p95_lateness_s": 41.342,
+    "max_prompt_delay_s": 51.911,
+    "p95_prompt_delay_s": 41.077,
+    "fault_injection": {
+      "ticks": 17250,
+      "checkins_accepted": 1752,
+      "concurrent_tick_pairs": 837,
+      "duplicate_ticks": 1721,
+      "checkins_refused": 294,
+      "restarts": 350
+    },
+    "runtime_s": 150.2
+  },
+  "deployment_cadence": {
+    "cadence": "deployment",
+    "schedules": 1000,
+    "seed": 2027,
+    "early_releases": 0,
+    "early_release_examples": [],
+    "duplicate_releases": 0,
+    "releases_with_wrong_email_count": 0,
+    "missed_releases": 0,
+    "max_lateness_s": 809.195,
+    "p95_lateness_s": 603.762,
+    "max_prompt_delay_s": 828.542,
+    "p95_prompt_delay_s": 596.786,
+    "fault_injection": {
+      "checkins_accepted": 1797,
+      "checkins_refused": 282,
+      "ticks": 1389,
+      "duplicate_ticks": 140,
+      "concurrent_tick_pairs": 70,
+      "restarts": 37
+    },
+    "runtime_s": 40.8
+  }
+}

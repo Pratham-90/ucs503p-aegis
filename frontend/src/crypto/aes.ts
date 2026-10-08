@@ -13,8 +13,11 @@ function importKey(key: Uint8Array, usage: KeyUsage): Promise<CryptoKey> {
   return crypto.subtle.importKey("raw", key as BufferSource, { name: "AES-GCM" }, false, [usage]);
 }
 
+/** CSPRNG bytes. getRandomValues is capped at 65,536 bytes per call, so fill in chunks. */
 export function randomBytes(length: number): Uint8Array {
-  return crypto.getRandomValues(new Uint8Array(length));
+  const out = new Uint8Array(length);
+  for (let i = 0; i < length; i += 65_536) crypto.getRandomValues(out.subarray(i, Math.min(length, i + 65_536)));
+  return out;
 }
 
 export async function aesGcmEncrypt(

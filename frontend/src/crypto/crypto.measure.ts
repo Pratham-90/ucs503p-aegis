@@ -1,6 +1,6 @@
 /**
  * Crypto timing harness (brief section 8). Run with `npm run measure`.
- * Writes metrics/crypto-timing.json; scripts/collect_metrics.py folds it into
+ * Writes metrics/raw/crypto-timing.json; scripts/collect_metrics.py folds it into
  * metrics/prototype-metrics.json. Measured with Node's Web Crypto (labelled so).
  */
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -51,7 +51,7 @@ it("measures client crypto timings", async () => {
     results[`shamir_reconstruct_k${k}_n${n}`] = await time(300, () => reconstructSecret(shares.slice(0, k)));
   }
 
-  const out = new URL("../../../metrics/crypto-timing.json", import.meta.url);
+  const out = new URL("../../../metrics/raw/crypto-timing.json", import.meta.url);
   mkdirSync(new URL(".", out), { recursive: true });
   writeFileSync(
     out,
