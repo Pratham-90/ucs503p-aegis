@@ -8,3 +8,7 @@ select = ["E", "F", "I", "UP", "B"]
 
 [lint.isort]
 known-first-party = ["crypto", "scheduler", "vault", "notifications", "api"]
+
+[lint.flake8-bugbear]
+# FastAPI's dependency-injection idiom puts calls in argument defaults.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header"]
