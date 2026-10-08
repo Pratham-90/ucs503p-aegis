@@ -25,6 +25,8 @@ class Settings:
     min_interval_s_production: int = 86_400
     min_interval_s_demo: int = 30
     max_trustees: int = 10
+    #: In-flight requests per process; must stay well below the 40-thread pool (see app.py).
+    max_concurrent_requests: int = 16
     max_ciphertext_bytes: int = 1_450_000  # a 1 MB file, base64'd inside the JSON envelope, + AES-GCM tag
 
     @property

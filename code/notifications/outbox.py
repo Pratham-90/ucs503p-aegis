@@ -24,11 +24,15 @@ from vault.models import OutboxEmail
 
 
 def queue_email(session: Session, *, to: str, subject: str, body: str, kind: str,
-                dedupe_key: str, vault_id: str | None = None) -> OutboxEmail | None:
-    """Insert an outbox row unless one with ``dedupe_key`` exists. Returns the row or None."""
+                dedupe_key: str, vault_id: str | None = None, created_at: datetime | None = None) -> OutboxEmail | None:
+    """Insert an outbox row unless one with ``dedupe_key`` exists. Returns the row or None.
+
+    ``created_at`` is the scheduler's logical time (demo clock / simulator), so
+    dispatch delays can be measured against deadlines on the same clock."""
     if session.execute(select(OutboxEmail.id).where(OutboxEmail.dedupe_key == dedupe_key)).first():
         return None
-    row = OutboxEmail(to=to, subject=subject, body=body, kind=kind, dedupe_key=dedupe_key, vault_id=vault_id)
+    row = OutboxEmail(to=to, subject=subject, body=body, kind=kind, dedupe_key=dedupe_key, vault_id=vault_id,
+                      created_at=created_at or datetime.now(UTC))
     try:
         with session.begin_nested():
             session.add(row)

@@ -69,12 +69,12 @@ def process_vault(session: Session, vault: Vault, now: datetime, base_url: str) 
             link = _checkin_link(session, vault, base_url, clock.release_at)
             subject, body = templates.checkin_prompt(link, clock.release_at)
             queue_email(session, to=owner_email, subject=subject, body=body, kind="checkin_prompt",
-                        dedupe_key=f"prompt:{vault.id}:{deadline_key}", vault_id=vault.id)
+                        dedupe_key=f"prompt:{vault.id}:{deadline_key}", vault_id=vault.id, created_at=now)
         elif action is Action.SEND_GRACE_REMINDER:
             link = _checkin_link(session, vault, base_url, clock.release_at)
             subject, body = templates.grace_reminder(link, clock.release_at)
             queue_email(session, to=owner_email, subject=subject, body=body, kind="grace_reminder",
-                        dedupe_key=f"grace:{vault.id}:{deadline_key}", vault_id=vault.id)
+                        dedupe_key=f"grace:{vault.id}:{deadline_key}", vault_id=vault.id, created_at=now)
         elif action is Action.RELEASE:
             vault.released_at = now
             for blob in vault.blobs:
@@ -84,7 +84,8 @@ def process_vault(session: Session, vault: Vault, now: datetime, base_url: str) 
                 trustee.access_token_hash = hash_token(token)
                 subject, body = templates.release_notice(f"{base_url}/trustee?t={token}", vault.k)
                 queue_email(session, to=trustee.email, subject=subject, body=body, kind="release",
-                            dedupe_key=f"release:{vault.id}:{trustee.id}", vault_id=vault.id)
+                            dedupe_key=f"release:{vault.id}:{trustee.id}", vault_id=vault.id,
+                            created_at=now)
     return Transition(vault.id, previous, vault.state, [a.value for a in decision.actions], now.isoformat())
 
 

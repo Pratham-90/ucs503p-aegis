@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import FastAPI
 
 from notifications.outbox import EmailSender, sender_from_env
@@ -34,6 +36,19 @@ def create_app(settings: Settings | None = None, db: Database | None = None,
     app.state.schema_ready = False
     app.state.sender = sender or sender_from_env()
     errors.install(app)
+
+    # FastAPI runs a sync dependency's setup, the endpoint and the dependency's teardown
+    # (where the transaction commits) as separate hops into a 40-thread pool. If every
+    # thread is blocked waiting for a database lock, the lock holder cannot get a thread
+    # to commit and all requests stall until the lock timeout (found by the load test).
+    # Capping in-flight requests well below the pool size always leaves threads free.
+    gate = asyncio.Semaphore(settings.max_concurrent_requests)
+
+    @app.middleware("http")
+    async def _limit_concurrency(request, call_next):
+        async with gate:
+            return await call_next(request)
+
     for router in (auth.router, vaults.router, checkin.router, trustee.router, ops.router, ops.demo):
         app.include_router(router, prefix="/api")
     return app
