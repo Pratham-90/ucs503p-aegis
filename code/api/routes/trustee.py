@@ -52,7 +52,8 @@ def validate_public_jwk(jwk: dict) -> dict:
 def invite(token: str, session: Session = Depends(get_session)):
     trustee = _trustee(session, token)
     vault = trustee.vault
-    return {"trustee_email": trustee.email, "owner_email": vault.owner.email, "position": trustee.position,
+    return {"vault_id": vault.id, "trustee_email": trustee.email, "owner_email": vault.owner.email,
+            "position": trustee.position,
             "enrolled": trustee.public_key_jwk is not None, "k": vault.k, "n": vault.n, "vault_state": vault.state,
             "can_enrol": vault.state == VaultState.SETUP.value}
 
