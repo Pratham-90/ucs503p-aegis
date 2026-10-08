@@ -51,11 +51,11 @@ function AuthForm({ mode }: { mode: "register" | "login" }) {
             {isRegister ? "Create account" : "Log in"}
           </Button>
         </form>
-        <p className="mt-4 text-center text-sm text-slate-600">
+        <p className="mt-4 text-center text-sm text-slate-600 dark:text-slate-400">
           {isRegister ? (
-            <>Already registered? <Link className="font-semibold text-indigo-700" to="/login">Log in</Link></>
+            <>Already registered? <Link className="font-semibold text-indigo-700 dark:text-indigo-300" to="/login">Log in</Link></>
           ) : (
-            <>New here? <Link className="font-semibold text-indigo-700" to="/register">Create an account</Link></>
+            <>New here? <Link className="font-semibold text-indigo-700 dark:text-indigo-300" to="/register">Create an account</Link></>
           )}
         </p>
       </Card>

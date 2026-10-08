@@ -31,9 +31,9 @@ export function CheckinLink() {
   return (
     <div className="mx-auto max-w-lg">
       <Card title="Aegis check-in">
-        {result ? <Alert kind={result.kind}>{result.text}</Alert> : <p className="text-sm text-slate-600">Confirming…</p>}
+        {result ? <Alert kind={result.kind}>{result.text}</Alert> : <p className="text-sm text-slate-600 dark:text-slate-400">Confirming…</p>}
         <p className="mt-4 text-sm">
-          <Link className="font-semibold text-indigo-700" to="/dashboard">Open your dashboard</Link>
+          <Link className="font-semibold text-indigo-700 dark:text-indigo-300" to="/dashboard">Open your dashboard</Link>
         </p>
       </Card>
     </div>

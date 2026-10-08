@@ -69,7 +69,7 @@ export function TrusteeEnrol() {
         )}
         {info && !info.enrolled && !info.can_enrol && <Alert kind="warning">This vault is already sealed; enrolment is closed.</Alert>}
         {info && !info.enrolled && info.can_enrol && (
-          <div className="space-y-4 text-sm text-slate-700">
+          <div className="space-y-4 text-sm text-slate-700 dark:text-slate-300">
             <p>
               Your browser will now generate an RSA-2048 keypair. Only the <strong>public</strong> key is sent to Aegis; the{" "}
               <strong>private</strong> key is downloaded as a file that only you hold. Without it you cannot help open the vault.

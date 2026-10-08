@@ -16,7 +16,7 @@ import { VaultNew } from "./pages/VaultNew";
 
 function RequireOwner({ children }: { children: React.ReactElement }) {
   const { owner, loading } = useAuth();
-  if (loading) return <p className="text-sm text-slate-500">Loading…</p>;
+  if (loading) return <p className="text-sm text-slate-500 dark:text-slate-400">Loading…</p>;
   return owner ? children : <Navigate to="/login" replace />;
 }
 

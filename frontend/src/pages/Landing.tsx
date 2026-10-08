@@ -13,7 +13,7 @@ export function Landing() {
   const { owner } = useAuth();
   return (
     <div className="space-y-10">
-      <section className="grid items-center gap-8 rounded-3xl bg-slate-900 px-6 py-10 text-white sm:px-10 lg:grid-cols-[1.4fr_1fr]">
+      <section className="grid items-center gap-8 rounded-3xl bg-slate-900 px-6 py-10 text-white sm:px-10 dark:ring-1 dark:ring-slate-800 lg:grid-cols-[1.4fr_1fr]">
         <div>
           <p className="text-sm font-semibold uppercase tracking-widest text-indigo-300">Encrypted legacy vault</p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-5xl">
@@ -38,21 +38,21 @@ export function Landing() {
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold text-slate-900">How it works</h2>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">How it works</h2>
         <ol className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((s) => (
-            <li key={s.n} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <li key={s.n} className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">{s.n}</span>
-              <h3 className="mt-3 font-semibold text-slate-900">{s.title}</h3>
-              <p className="mt-1 text-sm text-slate-600">{s.body}</p>
+              <h3 className="mt-3 font-semibold text-slate-900 dark:text-slate-100">{s.title}</h3>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{s.body}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        <h2 className="font-semibold text-slate-900">Trust model, in one line</h2>
-        <p className="mt-1 text-sm text-slate-700">
+      <section className="rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">Trust model, in one line</h2>
+        <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
           The server is trusted to keep time and deliver messages, never to read your vault: it stores only ciphertext
           and shares encrypted to each trustee's own key.
         </p>

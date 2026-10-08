@@ -13,7 +13,7 @@ const TOKEN_KEY = "aegis.demoToken";
 function linkify(text: string): ReactNode[] {
   return text.split(/(https?:\/\/\S+)/g).map((part, i) =>
     /^https?:\/\//.test(part) ? (
-      <a key={i} href={part.replace(/^https?:\/\/[^/]+/, "")} className="break-all font-medium text-indigo-700 underline">{part}</a>
+      <a key={i} href={part.replace(/^https?:\/\/[^/]+/, "")} className="break-all font-medium text-indigo-700 dark:text-indigo-300 underline">{part}</a>
     ) : (
       <span key={i}>{part}</span>
     ),
@@ -114,8 +114,8 @@ export function DemoConsole() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Demo Console</h1>
-          <p className="text-sm text-slate-600">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Demo Console</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Server time {clock ? new Date(clock.server_now).toLocaleTimeString() : "…"}
             {clock && clock.offset_s > 0 && <> (fast-forwarded {clock.offset_s} s)</>}
           </p>
@@ -142,16 +142,16 @@ export function DemoConsole() {
         <Card title={`Outbox (${emails.length})`} subtitle="Every email the system decided to send (in-app mailbox).">
           <ul className="max-h-[32rem] space-y-3 overflow-y-auto pr-1" data-testid="outbox">
             {emails.map((e) => (
-              <li key={e.id} className="rounded-lg p-3 text-sm ring-1 ring-slate-200">
+              <li key={e.id} className="rounded-lg p-3 text-sm ring-1 ring-slate-200 dark:ring-slate-700">
                 <div className="flex flex-wrap justify-between gap-2">
                   <span className="font-semibold">{e.subject}</span>
-                  <span className="text-xs text-slate-500">{e.kind} · {e.status}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{e.kind} · {e.status}</span>
                 </div>
-                <div className="text-xs text-slate-500">to {e.to} · {new Date(e.created_at).toLocaleTimeString()}</div>
-                <p className="mt-2 whitespace-pre-wrap text-slate-700">{linkify(e.body)}</p>
+                <div className="text-xs text-slate-500 dark:text-slate-400">to {e.to} · {new Date(e.created_at).toLocaleTimeString()}</div>
+                <p className="mt-2 whitespace-pre-wrap text-slate-700 dark:text-slate-300">{linkify(e.body)}</p>
               </li>
             ))}
-            {emails.length === 0 && <li className="text-sm text-slate-500">No emails yet.</li>}
+            {emails.length === 0 && <li className="text-sm text-slate-500 dark:text-slate-400">No emails yet.</li>}
           </ul>
         </Card>
         <div className="space-y-6">
@@ -168,23 +168,23 @@ export function DemoConsole() {
                   </span>
                 </li>
               ))}
-              {vaults.length === 0 && <li className="text-slate-500">No vaults.</li>}
+              {vaults.length === 0 && <li className="text-slate-500 dark:text-slate-400">No vaults.</li>}
             </ul>
             {view && <Mono className="mt-4 max-h-96">{JSON.stringify(view, null, 2)}</Mono>}
           </Card>
           <Card title="Scheduler tick log">
             <ul className="max-h-72 space-y-2 overflow-y-auto text-xs">
               {ticks.map((t) => (
-                <li key={t.id} className="rounded bg-slate-50 p-2 ring-1 ring-slate-200">
+                <li key={t.id} className="rounded bg-slate-50 dark:bg-slate-800/50 p-2 ring-1 ring-slate-200 dark:ring-slate-700">
                   <span className="font-mono">{new Date(t.started_at).toLocaleTimeString()}</span> · {t.trigger} · checked {t.vaults_checked}
                   {t.transitions.map((tr) => (
-                    <div key={tr.vault_id + tr.to_state} className="mt-1 text-slate-700">
+                    <div key={tr.vault_id + tr.to_state} className="mt-1 text-slate-700 dark:text-slate-300">
                       {tr.from_state} → <strong>{tr.to_state}</strong> ({tr.actions.join(", ")})
                     </div>
                   ))}
                 </li>
               ))}
-              {ticks.length === 0 && <li className="text-slate-500">No ticks yet.</li>}
+              {ticks.length === 0 && <li className="text-slate-500 dark:text-slate-400">No ticks yet.</li>}
             </ul>
           </Card>
         </div>
@@ -194,13 +194,13 @@ export function DemoConsole() {
         {metrics ? (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead><tr className="text-left text-slate-500"><th className="py-1 pr-4">Metric</th><th className="pr-4">Value</th><th className="pr-4">Target</th><th>Met</th></tr></thead>
+              <thead><tr className="text-left text-slate-500 dark:text-slate-400"><th className="py-1 pr-4">Metric</th><th className="pr-4">Value</th><th className="pr-4">Target</th><th>Met</th></tr></thead>
               <tbody>
                 {Object.entries(metrics).map(([name, m]) => (
-                  <tr key={name} className="border-t border-slate-100">
+                  <tr key={name} className="border-t border-slate-100 dark:border-slate-800">
                     <td className="py-1 pr-4 font-medium">{name}</td>
                     <td className="pr-4 font-mono">{typeof m.value === "object" ? JSON.stringify(m.value) : String(m.value)}{m.unit ? ` ${m.unit}` : ""}</td>
-                    <td className="pr-4 text-slate-600">{m.target ?? "—"}</td>
+                    <td className="pr-4 text-slate-600 dark:text-slate-400">{m.target ?? "—"}</td>
                     <td>{m.met === true ? "✓" : m.met === false ? "✗" : "—"}</td>
                   </tr>
                 ))}
@@ -208,7 +208,7 @@ export function DemoConsole() {
             </table>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">No metrics file published with this build.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">No metrics file published with this build.</p>
         )}
       </Card>
     </div>

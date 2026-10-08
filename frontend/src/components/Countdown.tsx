@@ -15,12 +15,12 @@ export function Countdown({ target, offsetMs, label }: { target: string | null; 
   if (!target) return null;
   const remaining = (new Date(target).getTime() - (now + offsetMs)) / 1000;
   return (
-    <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-      <div className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</div>
-      <div className="mt-1 font-mono text-2xl font-semibold tabular-nums text-slate-900" data-testid={`countdown-${label}`}>
+    <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 p-4 ring-1 ring-slate-200 dark:ring-slate-700">
+      <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</div>
+      <div className="mt-1 font-mono text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100" data-testid={`countdown-${label}`}>
         {remaining > 0 ? formatDuration(remaining) : "due now"}
       </div>
-      <div className="mt-1 text-xs text-slate-500">{new Date(target).toLocaleString()}</div>
+      <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{new Date(target).toLocaleString()}</div>
     </div>
   );
 }

@@ -72,7 +72,7 @@ function VaultCard({ token, vault }: { token: string; vault: GuardedVault }) {
         <div className="space-y-4">
           <Alert kind="warning">This vault was released{vault.released_at ? ` at ${new Date(vault.released_at).toLocaleString()}` : ""}.</Alert>
           {keyFile ? (
-            <p className="text-sm text-emerald-700">Private key loaded ({keyFile.email}).</p>
+            <p className="text-sm text-emerald-700 dark:text-emerald-400">Private key loaded ({keyFile.email}).</p>
           ) : (
             <Field label="Load your private key file (aegis-trustee-….json)">
               <input aria-label="Private key file" type="file" accept=".json,application/json" className="text-sm" onChange={(e) => void loadFile(e.target.files)} />
@@ -83,7 +83,7 @@ function VaultCard({ token, vault }: { token: string; vault: GuardedVault }) {
           </Button>
           {share && (
             <div className="space-y-2">
-              <p className="text-sm text-slate-700">Your share (decrypted in this browser). Give it to the Recovery Room:</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300">Your share (decrypted in this browser). Give it to the Recovery Room:</p>
               <Mono className="whitespace-pre-wrap break-all" >{share}</Mono>
               <div className="flex flex-wrap gap-2">
                 <CopyButton text={share} label="Copy share" />
@@ -140,8 +140,8 @@ export function TrusteePortal() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Trustee portal</h1>
-        <p className="text-sm text-slate-600">Vaults you guard, and their state. No secrets are shown here until a vault is released.</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Trustee portal</h1>
+        <p className="text-sm text-slate-600 dark:text-slate-400">Vaults you guard, and their state. No secrets are shown here until a vault is released.</p>
       </div>
       {Object.entries(vaults).map(([t, v]) => <VaultCard key={v.vault_id} token={t} vault={v} />)}
       {Object.keys(vaults).length === 0 && <Alert kind="info">No vaults found for this browser yet.</Alert>}

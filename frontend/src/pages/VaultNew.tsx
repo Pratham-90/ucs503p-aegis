@@ -149,7 +149,7 @@ export function VaultNew() {
     <div className="space-y-6">
       <ol className="flex flex-wrap gap-2 text-xs font-medium">
         {steps.map(([id, label], i) => (
-          <li key={id} className={`rounded-full px-3 py-1 ring-1 ${step === id ? "bg-indigo-600 text-white ring-indigo-600" : "bg-white text-slate-600 ring-slate-200"}`}>
+          <li key={id} className={`rounded-full px-3 py-1 ring-1 ${step === id ? "bg-indigo-600 text-white ring-indigo-600" : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 ring-slate-200 dark:ring-slate-700"}`}>
             {i + 1}. {label}
           </li>
         ))}
@@ -160,7 +160,7 @@ export function VaultNew() {
         <Card title="Trustees, threshold and schedule" subtitle="FR-3, FR-4. The clock starts once the encrypted secret is uploaded.">
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-800">Trustees (N = {validEmails.length})</h3>
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Trustees (N = {validEmails.length})</h3>
               {emails.map((value, i) => (
                 <div key={i} className="flex gap-2">
                   <input
@@ -188,7 +188,7 @@ export function VaultNew() {
               <Field label="Threshold K (shares needed to open the vault)">
                 <input aria-label="Threshold K" className={inputClass} type="number" min={1} max={10} value={k} onChange={(e) => setK(Number(e.target.value))} />
               </Field>
-              <div className="text-sm text-slate-700" data-testid="loss-tolerance">
+              <div className="text-sm text-slate-700 dark:text-slate-300" data-testid="loss-tolerance">
                 <strong>{feedback.lossTolerance}</strong> trustee{feedback.lossTolerance === 1 ? "" : "s"} can be lost and the vault still opens (N − K).
               </div>
               {feedback.errors.map((m) => <Alert key={m} kind="error">{m}</Alert>)}
@@ -209,7 +209,7 @@ export function VaultNew() {
                   </Field>
                 </div>
               )}
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Check in every {formatDuration(schedule.interval)}; a missed check-in leads to Warning, then Grace, and release{" "}
                 {formatDuration(schedule.grace)} after the deadline.
               </p>
@@ -229,10 +229,10 @@ export function VaultNew() {
             {vault.trustees.map((t) => {
               const invite = invites[t.id];
               return (
-                <li key={t.id} className="rounded-xl p-3 ring-1 ring-slate-200" data-testid={`invite-${t.position}`}>
+                <li key={t.id} className="rounded-xl p-3 ring-1 ring-slate-200 dark:ring-slate-700" data-testid={`invite-${t.position}`}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-sm font-medium">#{t.position} {t.email}</span>
-                    <span className={`text-sm font-semibold ${t.enrolled ? "text-emerald-700" : "text-amber-700"}`}>
+                    <span className={`text-sm font-semibold ${t.enrolled ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}`}>
                       {t.enrolled ? "✓ enrolled" : "waiting…"}
                     </span>
                   </div>
@@ -240,7 +240,7 @@ export function VaultNew() {
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       {invite ? (
                         <>
-                          <code className="break-all rounded bg-slate-100 px-2 py-1 text-xs" data-testid="invite-link">{invite.link}</code>
+                          <code className="break-all rounded bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs" data-testid="invite-link">{invite.link}</code>
                           <CopyButton text={invite.link} />
                         </>
                       ) : (
@@ -277,10 +277,10 @@ export function VaultNew() {
       {step === "review" && vault && (
         <Card title="Review and seal" subtitle="Nothing has left your browser yet.">
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
-            <div><dt className="text-slate-500">Threshold</dt><dd className="font-semibold">{vault.k} of {vault.n} trustees ({vault.loss_tolerance} can be lost)</dd></div>
-            <div><dt className="text-slate-500">Schedule</dt><dd className="font-semibold">every {formatDuration(vault.interval_s)}, {formatDuration(vault.grace_s)} grace</dd></div>
-            <div><dt className="text-slate-500">Message</dt><dd className="font-semibold">{message.length} characters</dd></div>
-            <div><dt className="text-slate-500">File</dt><dd className="font-semibold">{file ? `${file.name} (${file.bytes.length} bytes)` : "none"}</dd></div>
+            <div><dt className="text-slate-500 dark:text-slate-400">Threshold</dt><dd className="font-semibold">{vault.k} of {vault.n} trustees ({vault.loss_tolerance} can be lost)</dd></div>
+            <div><dt className="text-slate-500 dark:text-slate-400">Schedule</dt><dd className="font-semibold">every {formatDuration(vault.interval_s)}, {formatDuration(vault.grace_s)} grace</dd></div>
+            <div><dt className="text-slate-500 dark:text-slate-400">Message</dt><dd className="font-semibold">{message.length} characters</dd></div>
+            <div><dt className="text-slate-500 dark:text-slate-400">File</dt><dd className="font-semibold">{file ? `${file.name} (${file.bytes.length} bytes)` : "none"}</dd></div>
           </dl>
           <Alert kind="info">
             On upload, your browser will: generate a 256-bit key → encrypt with AES-256-GCM → split the key into {vault.n} Shamir

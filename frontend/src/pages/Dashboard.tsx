@@ -58,7 +58,7 @@ export function Dashboard() {
     setServerView(await api.get<ServerView>(`/vaults/${vault.id}/server-view`));
   }
 
-  if (vault === undefined) return <p className="text-sm text-slate-500">Loading your vault…</p>;
+  if (vault === undefined) return <p className="text-sm text-slate-500 dark:text-slate-400">Loading your vault…</p>;
   if (vault === null) {
     return (
       <Card title="You don't have a vault yet" subtitle="Create one: choose trustees, a threshold and a check-in schedule.">
@@ -75,7 +75,7 @@ export function Dashboard() {
       {error && <Alert kind="error">{error}</Alert>}
       {vault.state === "setup" ? (
         <Card title="Vault setup in progress" actions={<StateBadge state="setup" large />}>
-          <p className="text-sm text-slate-700">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
             {enrolled} of {vault.n} trustees have enrolled. Once all of them have, encrypt and upload your secret to
             arm the vault.
           </p>
@@ -95,12 +95,12 @@ export function Dashboard() {
                 <Countdown label="release if no check-in" target={vault.release_at} offsetMs={offsetMs} />
               </>
             )}
-            <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-              <div className="text-xs font-medium uppercase tracking-wide text-slate-500">threshold</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 p-4 ring-1 ring-slate-200 dark:ring-slate-700">
+              <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">threshold</div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
                 {vault.k} of {vault.n}
               </div>
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {vault.loss_tolerance} trustee{vault.loss_tolerance === 1 ? "" : "s"} can be lost
               </div>
             </div>
@@ -110,7 +110,7 @@ export function Dashboard() {
               <Button onClick={checkIn} busy={busy} className="!px-6 !py-3 text-base" data-testid="checkin-button">
                 I'm OK — check in
               </Button>
-              <span className="text-sm text-slate-600">
+              <span className="text-sm text-slate-600 dark:text-slate-400">
                 Every {formatDuration(vault.interval_s)}, then {formatDuration(vault.grace_s)} grace.
               </span>
             </div>
@@ -124,27 +124,27 @@ export function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Trustees" subtitle="Each holds one encrypted share; their private key never leaves their device.">
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
             {vault.trustees.map((t) => (
               <li key={t.id} className="flex items-center justify-between py-2 text-sm">
                 <span>
-                  <span className="mr-2 font-mono text-slate-400">#{t.position}</span>
+                  <span className="mr-2 font-mono text-slate-400 dark:text-slate-500">#{t.position}</span>
                   {t.email}
                 </span>
-                <span className={t.enrolled ? "text-emerald-700" : "text-amber-700"}>{t.enrolled ? "key enrolled" : "pending"}</span>
+                <span className={t.enrolled ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}>{t.enrolled ? "key enrolled" : "pending"}</span>
               </li>
             ))}
           </ul>
         </Card>
         <Card title="Check-in history">
           {vault.checkins.length === 0 ? (
-            <p className="text-sm text-slate-500">No check-ins yet.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">No check-ins yet.</p>
           ) : (
             <ul className="space-y-1 text-sm">
               {vault.checkins.map((c) => (
                 <li key={c.at} className="flex justify-between">
                   <span>{new Date(c.at).toLocaleString()}</span>
-                  <span className="text-slate-500">{c.source}</span>
+                  <span className="text-slate-500 dark:text-slate-400">{c.source}</span>
                 </li>
               ))}
             </ul>
