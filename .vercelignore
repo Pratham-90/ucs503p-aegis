@@ -1,0 +1,16 @@
+# Not needed by the Vercel build or the Python function.
+.venv
+site
+docs
+journals
+project-proposal
+project-report-final
+project-report-prototype-stage
+report
+report-assets
+*.db
+code/spikes
+code/tests
+frontend/node_modules
+frontend/test-results
+frontend/playwright-report
