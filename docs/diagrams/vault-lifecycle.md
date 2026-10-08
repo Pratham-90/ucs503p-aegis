@@ -8,12 +8,14 @@ early (`NFR-REL-1`).
 stateDiagram-v2
     direction LR
 
+    state "Setup — trustees enrolling, no payload yet, clock not running" as Setup
     state "Active — within the interval, next check-in not yet due" as Active
     state "Warning — check-in due, prompt and reminders sent (FR-5)" as Warning
     state "Grace — deadline missed, grace period counting down" as Grace
     state "Released — grace expired, encrypted blobs distributed" as Released
 
-    [*] --> Active : vault created / arm timer
+    [*] --> Setup : vault created
+    Setup --> Active : encrypted payload uploaded / arm timer
     Active --> Warning : interval elapses / send prompt (FR-5)
     Warning --> Active : Owner confirms check-in (FR-6) / reset timer
     Warning --> Grace : deadline passes, no confirmation / start grace
@@ -26,13 +28,18 @@ stateDiagram-v2
 
 | From | To | Trigger | Guard / action |
 | --- | --- | --- | --- |
-| *(start)* | Active | Vault created | Arm the check-in timer. |
+| *(start)* | Setup | Vault created | Trustees enrol their public keys; the clock is not running. |
+| Setup | Active | Encrypted payload uploaded | Arm the check-in timer (deadline = now + interval). |
 | Active | Warning | Check-in interval elapses | Send check-in prompt (`FR-5`). |
 | Warning | Active | Owner confirms check-in | One-action confirm (`FR-6`); reset timer. |
 | Warning | Grace | Check-in deadline passes, still unconfirmed | Begin the grace-period countdown. |
 | Grace | Active | Owner confirms check-in | One-action confirm (`FR-6`); reset timer. |
 | Grace | Released | Grace period expires, still unconfirmed | Distribute one encrypted blob per trustee (`FR-7`). |
 | Released | *(end)* | Trustees decrypt blobs, combine `K` shares | Reconstruct key, decrypt payload — all client-side (`FR-8`). |
+
+The Warning/Grace boundary is not fixed by the SRS (FR-3 defines only the interval
+and the grace period). The prototype places it inside the grace window, by default
+at half of it (`warning_s`), so the release instant stays exactly `deadline + grace`.
 
 ## The safety gate
 

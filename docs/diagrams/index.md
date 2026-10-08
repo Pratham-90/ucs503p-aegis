@@ -9,3 +9,5 @@ they render on this site and stay diffable in version control.
   Released state machine, with the release gate that enforces `NFR-REL-1`.
 - **[High-level architecture](architecture.md)** — frontend, FastAPI backend,
   the four domain packages, and the persistence/scheduling/email edges.
+- **[Sequences](sequences.md)** — creating and sealing a vault; release and K-of-N recovery.
+- **[Data model](data-model.md)** — the SQLAlchemy entities behind the prototype.
