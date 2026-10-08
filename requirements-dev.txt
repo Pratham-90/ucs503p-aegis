@@ -1,0 +1,9 @@
+# Local development, tests, scripts and report generation.
+-r requirements.txt
+uvicorn>=0.30
+pytest>=8
+pytest-cov>=5
+hypothesis>=6.100
+ruff>=0.6
+cryptography>=43
+python-docx>=1.1

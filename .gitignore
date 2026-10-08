@@ -466,3 +466,8 @@ TSWLatexianTemp*
 # Uncomment the next line to have this generated file ignored.
 #*Notes.bib
  
+# --- Aegis prototype (added for the Vite frontend, local SQLite and Vercel) ---
+node_modules/
+*.db
+.vercel/
+demo-keys/

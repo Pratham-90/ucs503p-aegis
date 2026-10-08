@@ -1,0 +1,10 @@
+# Ruff config for the Aegis Python code (kept separate from the template's pyproject.toml).
+target-version = "py312"
+line-length = 120
+extend-exclude = ["frontend", "site", "code/spikes", ".venv"]
+
+[lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[lint.isort]
+known-first-party = ["crypto", "scheduler", "vault", "notifications", "api"]
