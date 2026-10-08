@@ -56,3 +56,19 @@ deployed crypto is JS, and the two are bound by shared test vectors.
 Week 4: harden the Python core (constant-time field arithmetic, CSPRNG,
 authenticated encryption, share integrity/authenticity), ship the property-test
 suite, and emit the versioned test-vector artifact the JS validates against.
+
+## Prototype status
+
+Implemented as planned above:
+
+- `shamir.py` — GF(2^521 − 1) split/reconstruct with validation (K ≥ 2, N ≥ K, N ≤ 255), a typed
+  `Share`, an injectable RNG for deterministic tests, `polynomial_from_points` for the K−1 secrecy property.
+- `encoding.py` — key/share byte and text formats (`aegis-share:v1:<x>:<y-b64url>`).
+- `envelope.py` — AES-256-GCM (vault-bound AAD) and RSA-OAEP-SHA-256, imported lazily so the API
+  runtime never needs them.
+- `test_vectors.json` — emitted by `scripts/gen_test_vectors.py`; the TypeScript client in
+  `frontend/src/crypto/` reproduces every vector (13/13).
+- Coverage 100%, Hypothesis properties with 0 failing cases (see `metrics/`).
+
+Not yet hardened (future work): constant-time field arithmetic (BigInt/Python ints are not
+constant-time), verifiable secret sharing / share authentication (threat T-9).

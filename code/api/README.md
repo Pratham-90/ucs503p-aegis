@@ -27,3 +27,13 @@ delegates every business rule to the domain packages (`crypto`, `scheduler`,
 
 Week 1: **scaffold only**. Framework: FastAPI. Frontend (React + Tailwind) is a
 separate concern documented in the architecture diagram.
+
+## Prototype status
+
+Implemented (all under `/api`, OpenAPI docs at `/api/docs`): `auth/register|login|logout`, `me`,
+`vaults` (create, `mine`, `{id}/payload`, `{id}/checkin`, `{id}/server-view`, reissue invite),
+`checkin/{token}` (GET previews, POST confirms — so link scanners cannot check in), `trustee/*`
+(invite, enrol, vaults, blob, payload), `cron/tick` (POST with `X-Cron-Secret`, GET with Bearer for
+Vercel Cron), `demo/*` (behind `X-Demo-Token`), `health`. Errors share one JSON shape.
+Every route that reads a vault's status first runs a due-check, so state is current even
+between ticks. Deployed through `api/index.py` (see `code/README.md`).

@@ -1,88 +1,109 @@
 # Aegis — an encrypted "dead man's switch" legacy vault
 
-Aegis lets an **Owner** store encrypted files and messages in a **vault** and
+Aegis lets an **Owner** store an encrypted message or file in a **vault** and
 designate **trustees** who can open it *only if the Owner stops responding*.
+The Owner checks in on a schedule; if a check-in is missed and the grace period
+ends, each trustee receives their encrypted share, and any **K of N** trustees
+together reconstruct the key and open the vault. Fewer than K learn nothing.
 
-The Owner checks in at a configured interval. Miss a check-in, and after a grace
-period the vault's decryption key — split ahead of time into `N` shares with a
-threshold `K` — is distributed to the trustees. Any **K of N** trustees combine
-their shares to reconstruct the key and open the vault. Fewer than `K` learn
-nothing.
+The server is **zero-knowledge**: the browser encrypts the payload (AES-256-GCM),
+splits the key with Shamir's Secret Sharing, and wraps each share to its
+trustee's public key (RSA-OAEP) before upload. The server stores only
+ciphertext and encrypted shares; it is trusted to keep time, never to read.
 
-> **Course context.** Solo project for **UCS503P — Software Engineering
-> (Laboratory)**, Thapar Institute of Engineering and Technology, 2026–27 ODD
-> semester. The formal project proposal (with author identity) lives in
-> [`project-proposal/`](project-proposal/); the SRS, diagrams, and the 12-week
-> plan live under [`docs/`](docs/).
+> **Course context.** UCS503P — Software Engineering (Laboratory), Thapar
+> Institute of Engineering and Technology, 2026–27 ODD. Team: Pratham Arora,
+> Krishna Pandey, Nipun Behl (COE). Lab instructor: Dr. Paramveer Sidhu.
+> SRS, threat model, diagrams and plan: [`docs/`](docs/) (published at
+> <https://pratham-90.github.io/ucs503p-aegis/>).
 
-## Algorithmic core
+## Status: working prototype
 
-**Shamir's Secret Sharing.** The payload is sealed with a symmetric key; that
-key is split into `N` shares over a finite field such that any `K` reconstruct
-it (Lagrange interpolation) and any `K-1` reveal *nothing*. This threshold
-property — not any single cipher — is what makes the dead-man's-switch safe: no
-one trustee, and no coalition smaller than `K`, can open the vault.
-
-## Planned stack
-
-| Layer | Choice |
+| | |
 | --- | --- |
-| Language | Python 3 |
-| API | FastAPI |
-| Persistence | SQLAlchemy — SQLite (dev), Postgres (later) |
-| Secret sharing | Hand-written Shamir module (`code/crypto`) |
-| Scheduling | APScheduler |
-| Email | SMTP |
-| Frontend | React + Tailwind |
-| Tests / lint | pytest + ruff |
+| **Live URL** | **TODO** — not deployed yet. Set after the first Vercel deployment (see [Deploy](#deploy-to-vercel)). |
+| Demo script | All 9 steps work end to end locally; verified by the Playwright test (`frontend/e2e/demo.spec.ts`). |
+| Measurements | [`metrics/README.md`](metrics/README.md) — every value from a script that was actually run. |
 
 ## Repository layout
 
 ```
-code/                 application source (one package per responsibility)
-  crypto/             Shamir secret sharing + payload encryption
-  scheduler/          the check-in clock; drives the vault lifecycle
-  vault/              domain models & repositories
-  notifications/      outbound SMTP messaging
-  api/                FastAPI application layer
-  spikes/             throwaway feasibility experiments
-  tests/              pytest suite
-docs/                 mkdocs documentation (SRS mirror, diagrams, 12-week plan)
-project-proposal/     LaTeX project proposal / SRS (main.tex)
-journals/             weekly engineering journal
+api/index.py              Vercel entrypoint (exposes code/api's FastAPI app)
+code/
+  crypto/                 authoritative Shamir (Python) + test_vectors.json
+  scheduler/              pure evaluate(), transactional tick()
+  vault/                  SQLAlchemy models, DB session, repositories
+  notifications/          outbox + EmailSender (log / Resend)
+  api/                    FastAPI app, routes, schemas
+  tests/                  pytest (unit, property, integration)
+frontend/                 React 18 + TypeScript + Vite + Tailwind
+  src/crypto/             aes.ts, shamir.ts, rsa.ts, encoding.ts, vault.ts (+ tests)
+  e2e/                    Playwright demo script
+scripts/                  seed, vectors, reliability, load, inspection, metrics, diagrams
+metrics/                  prototype-metrics.json + README (generated)
+report-assets/            screenshots/ and diagrams/ (PNG) for the report
+report/                   Word file with report content + references.bib
+docs/                     mkdocs site (SRS, threat model, diagrams, plan)
 ```
 
-## Setup
+## Run it locally
+
+Prerequisites: Python 3.12 and Node 22+.
 
 ```bash
-# 1. Clone
-git clone https://github.com/Pratham-90/ucs503p-aegis.git
-cd ucs503p-aegis
-
-# 2. (Recommended) create a virtual environment
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-
-# 3. Install test/lint tooling (application deps land as modules are built)
-python -m pip install pytest ruff
-
-# 4. Run the test suite
-python -m pytest
-
-# 5. Preview the documentation locally (requires the mkdocs stack)
-python -m pip install mkdocs mkdocs-material mkdocs-material-extensions \
-  mkdocstrings mkdocstrings-python mkdocs-literate-nav mkdocs-section-index \
-  mkdocs-git-revision-date-localized-plugin mkdocs-git-authors-plugin \
-  pymdown-extensions
-mkdocs serve
+.venv/Scripts/activate            # macOS/Linux: source .venv/bin/activate
+pip install -r requirements-dev.txt
+(cd frontend && npm ci)
 ```
 
-## Status
+Two terminals:
 
-**Week 1 — requirements & scaffolding.** Module scaffold, SRS, diagrams, a
-Shamir feasibility spike, and the 12-week plan. No application behaviour is
-implemented yet. See [`journals/`](journals/) for the weekly log and
-`docs/plan/twelve-week-plan.md` for the roadmap.
+```bash
+python scripts/run_local_server.py --fresh      # API on :8000 (SQLite, DEMO_MODE, EMAIL_MODE=log)
+```
+
+```bash
+cd frontend && npm run dev                       # UI on http://localhost:5173 (proxies /api)
+```
+
+The local Demo Console token is `local-demo-token` (set `DEMO_ADMIN_TOKEN` to change
+it). Emails appear in the Demo Console's Outbox. To start from a ready-made vault:
+
+```bash
+python scripts/seed_demo.py --base-url http://127.0.0.1:8000   # writes key files to demo-keys/
+```
+
+## Test and measure
+
+```bash
+ruff check . && python -m pytest                           # Python: unit, property, integration
+cd frontend && npx eslint . && npm test && npm run build    # TypeScript incl. Python<->TS vectors
+cd frontend && npx playwright install chromium && npx playwright test   # end-to-end demo script
+python scripts/collect_metrics.py                          # regenerate metrics/ (~5 min)
+python scripts/gen_test_vectors.py                         # regenerate the shared vectors
+bash scripts/export_diagrams.sh                            # Mermaid -> report-assets/diagrams/*.png
+```
+
+## Deploy to Vercel
+
+One Vercel project serves the static frontend and the FastAPI function on the
+same origin (`vercel.json`). Steps:
+
+1. Import the GitHub repo into Vercel (framework comes from `vercel.json`; no root-directory change).
+2. Add **Neon Postgres** from the Vercel Marketplace; it injects `DATABASE_URL`. Tables are created on first request.
+3. Set environment variables (Production and Preview) from [`.env.example`](.env.example):
+   `JWT_SECRET`, `CRON_SECRET`, `DEMO_ADMIN_TOKEN` (long random strings), `APP_BASE_URL`
+   (the deployment URL), `DEMO_MODE=true`, `EMAIL_MODE=log` (or `resend` + `RESEND_API_KEY` + `EMAIL_FROM`).
+4. In GitHub → Settings → Secrets → Actions add `APP_BASE_URL` and `CRON_SECRET` for the
+   5-minute tick (`.github/workflows/tick.yml`; scheduled workflows run from `main` only).
+5. Seed: `python scripts/seed_demo.py --base-url https://<deployment>`.
+6. Measure the live site: `python scripts/load_checkin.py --base-url https://<deployment> --label deployed`,
+   then `python scripts/collect_metrics.py --reuse`.
+
+Without a verified email domain Resend only delivers to the account owner's own
+address; `EMAIL_MODE=log` keeps every email in the in-app Outbox, which is what
+the demo uses.
 
 ## Licence
 

@@ -17,3 +17,4 @@
 - [Project selection criteria](criteria-for-project-selection.md)
 - Journals:
     - [Week 1 — setup & scaffolding](journals/pra-kri-nip/w1-setup-and-scaffolding.md)
+    - [Week 8 — prototype build](journals/pra-kri-nip/w8-prototype-build.md)
