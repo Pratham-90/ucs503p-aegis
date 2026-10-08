@@ -1,19 +1,16 @@
 """Aegis :: scheduler — the check-in clock.
 
 Responsibilities:
-    * Track each vault's check-in interval, warning window, and grace period.
-    * Drive the vault lifecycle: Active -> Warning -> Grace -> Released, firing
-      the transitions when their time triggers elapse.
-    * Ask the ``notifications`` package to prompt the Owner, and — only after
-      the grace period expires with no confirmed check-in — trigger share
-      distribution to trustees.
+    * ``state.evaluate(clock, now)``: a *pure* function that decides the vault's
+      lifecycle state (Active -> Warning -> Grace -> Released) and the actions
+      owed on the way. It is the only place release is decided (NFR-REL-1).
+    * ``tick.tick(db, now)``: applies those decisions to the database in one
+      transaction, with an idempotent outbox, so a release is recorded exactly
+      once (NFR-REL-3) and deadlines survive restarts (NFR-REL-2).
 
-Planned mechanism: APScheduler jobs persisted alongside the vault state, so a
-restart never loses a pending deadline. This package owns the single most
-safety-critical rule in Aegis: it must **never release a vault early**
-(see NFR-REL-1 in the SRS).
-
-Week 1 status: scaffold only.
+Deployment note: Vercel functions do not keep a process alive, so there is no
+APScheduler loop. Ticks are triggered by a GitHub Actions cron, a "Run tick now"
+button, lazy due-checks on status reads, and a daily Vercel cron backstop.
 """
 
 __all__: list[str] = []
