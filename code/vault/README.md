@@ -30,3 +30,10 @@ directly.
 
 Week 1: **scaffold only**. Storage: SQLAlchemy — SQLite for development,
 Postgres for later stages.
+
+## Prototype status
+
+Implemented in `models.py` (see `docs/diagrams/data-model.md`), with UTC-aware timestamps,
+token hashes only, and a UNIQUE owner per vault (NG-3). `db.py` normalises Neon URLs to the
+psycopg 3 driver and uses no connection pooling on Postgres (serverless). Tables are created on
+first request (`create_all`); migrations (Alembic) are future work.

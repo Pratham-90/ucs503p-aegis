@@ -1,0 +1,26 @@
+# Scheduler trigger (FR-5, FR-7). Vercel functions do not keep a process alive and
+# Hobby-plan Vercel Cron runs at most once a day, so GitHub Actions calls the tick
+# endpoint every 5 minutes. Needs repository secrets APP_BASE_URL and CRON_SECRET.
+# Note: GitHub runs scheduled workflows only from the default branch, may delay them,
+# and pauses them after 60 days without repository activity.
+name: scheduler-tick
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/tick
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::notice::APP_BASE_URL / CRON_SECRET secrets are not set; skipping."
+            exit 0
+          fi
+          curl -fsS --max-time 60 -X POST -H "X-Cron-Secret: $CRON_SECRET" "$APP_BASE_URL/api/cron/tick"

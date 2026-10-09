@@ -61,6 +61,35 @@ that cross the client/server trust boundary, and both carry **ciphertext only**:
 Nothing that crosses into the server is ever plaintext: no payload, no key, no
 plaintext share (`NFR-SEC-5`).
 
+## Deployment (prototype)
+
+One Vercel project serves the static React build from its CDN and runs the
+FastAPI app as a Python function on the same origin, so the session cookie needs
+no CORS. Vercel functions do not keep a process alive, so ticks are triggered
+from outside (GitHub Actions every 5 minutes, the Demo Console button, lazy
+due-checks on status reads, and a daily Vercel Cron backstop).
+
+```mermaid
+flowchart LR
+    subgraph Browser["Browser (Owner / Trustee)"]
+        UI["React + Tailwind UI"]
+        CC["Client crypto<br/>AES-GCM · Shamir (BigInt) · RSA-OAEP"]
+    end
+    subgraph Vercel["Vercel project"]
+        FE["Static frontend (CDN)"]
+        API["FastAPI function<br/>/api/*"]
+    end
+    DB[("Neon Postgres")]
+    GH["GitHub Actions cron<br/>every 5 min"]
+    MAIL["Outbox / Resend"]
+    UI --> CC
+    UI -- "HTTPS" --> FE
+    UI -- "HTTPS JSON (ciphertext only)" --> API
+    API --> DB
+    GH -- "POST /api/cron/tick" --> API
+    API --> MAIL
+```
+
 ## Component responsibilities
 
 | Component | Responsibility | Location |

@@ -1,37 +1,42 @@
 # `scheduler` — the check-in clock
 
-Owns time. This package turns the Owner's configured **check-in interval** and
-**grace period** into scheduled deadlines and moves a vault through its
-lifecycle when those deadlines pass.
+Owns time. Turns the Owner's **check-in interval** and **grace period** (FR-3)
+into deadlines and moves each vault through its lifecycle.
 
-## Lifecycle driven here
+## Design (as built in the prototype)
+
+| Piece | What it does | Requirement |
+| --- | --- | --- |
+| `state.evaluate(clock, now)` | **Pure function**: the vault's state at `now` and the actions owed. The *only* place release is decided. Moves forward only; catches up through missed transitions in order. | NFR-REL-1 |
+| `state.check_in(clock, now)` | Back to Active with `deadline = now + interval`; refused at or after `deadline + grace`. | FR-6 |
+| `tick.tick(db, now)` | Loads due vaults `FOR UPDATE SKIP LOCKED` (Postgres) / under `BEGIN IMMEDIATE` (SQLite), applies `evaluate`, writes the state change and outbox rows **in one transaction**, logs the tick. | NFR-REL-2, NFR-REL-3 |
+| `tick.due_check(...)` | The same, for one vault, run when a status endpoint is read. | FR-5 |
 
 ```
-Active  --(interval elapses, prompt due)-->  Warning
-Warning --(Owner confirms check-in)-------->  Active      (deadline reset)
-Warning --(grace period elapses)----------->  Grace
-Grace   --(grace expires, still no check-in)-> Released    (shares distributed)
+Setup ──payload uploaded──► Active ──now ≥ D──► Warning ──now ≥ D + warning_s──► Grace ──now ≥ D + grace──► Released
+                              ▲           (prompt)              (reminder)              (encrypted blobs)
+                              └──────────── confirmed check-in (from Active / Warning / Grace) ──┘
 ```
 
-See the state diagram in `docs/diagrams/vault-lifecycle.md` for the full set of
-triggers and guards.
+`D` is the deadline (last check-in + interval). `warning_s` defaults to half the
+grace period; the SRS leaves this boundary open, and placing it inside the grace
+window keeps the release instant exactly `D + grace`.
 
-## Responsibilities
+## Why there is no APScheduler
 
-- Schedule the next prompt when a vault becomes `Active` or is reset.
-- Persist jobs so a process restart re-arms every pending deadline (no missed
-  or duplicated releases).
-- On grace expiry, invoke `crypto` share generation + `notifications`
-  distribution exactly once.
+The Week-1 plan named APScheduler, but Vercel functions do not keep a process
+alive. Deadlines therefore live in the database (which also gives NFR-REL-2 for
+free) and ticks are triggered from outside: GitHub Actions every 5 minutes,
+the Demo Console "Run tick now" button, lazy due-checks on status reads, and a
+daily Vercel Cron backstop.
 
-## Critical constraint
+## Exactly-once and never-early, tested
 
-The catastrophic failure mode is **releasing a vault early**. Every transition
-toward `Released` must be gated on a real, persisted, elapsed deadline — never
-on wall-clock drift, a race, or a retry. This is NFR-REL-1 in the SRS and the
-primary focus of the scheduler's test suite.
-
-## Status
-
-Week 1: **scaffold only**. Planned engine: APScheduler with a persistent job
-store.
+- `code/tests/test_scheduler_state.py` — exhaustive cases plus Hypothesis
+  properties (release implies `now ≥ D + grace`; release owed at most once over
+  non-monotone time).
+- `code/tests/test_scheduler_tick.py` — duplicate ticks, a stale-snapshot race,
+  four concurrent threads, restarts.
+- `scripts/reliability_sim.py` — ≥ 1000 schedules with fault injection; results
+  in `metrics/`. Timeliness (≤ 60 s) depends on the tick cadence: met at the
+  requirement cadence, **not** met by the 5-minute cron alone.

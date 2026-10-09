@@ -1,0 +1,50 @@
+{
+  "scripted": {
+    "source": "scripted client (Python crypto) through the real API",
+    "needles": [
+      "plaintext message",
+      "attached file contents",
+      "AES key",
+      "share 1 (text)",
+      "share 1 (bytes)",
+      "share 1 (y)",
+      "share 2 (text)",
+      "share 2 (bytes)",
+      "share 2 (y)",
+      "share 3 (text)",
+      "share 3 (bytes)",
+      "share 3 (y)",
+      "file contents (base64, as in the envelope)"
+    ],
+    "rows_scanned": 21,
+    "values_scanned": 164,
+    "requests_scanned": 6,
+    "findings": []
+  },
+  "e2e": {
+    "source": "database left by the Playwright run of the real browser UI (e2e.db)",
+    "needles": [
+      "plaintext message",
+      "attached file contents",
+      "AES key",
+      "share 1 (text)",
+      "share 1 (bytes)",
+      "share 1 (y)",
+      "share 2 (text)",
+      "share 2 (bytes)",
+      "share 2 (y)"
+    ],
+    "rows_scanned": 27,
+    "values_scanned": 199,
+    "findings": []
+  },
+  "total_findings": 0,
+  "scanner_self_test": {
+    "raw bytes": true,
+    "utf-8 text": true,
+    "base64": true,
+    "base64url": true,
+    "hex": true,
+    "nested json": true
+  }
+}

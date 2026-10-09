@@ -1,16 +1,14 @@
 """Aegis :: notifications — outbound messaging.
 
 Responsibilities:
-    * Send scheduled check-in prompts to the Owner.
-    * Send warning reminders during the warning/grace windows.
-    * On release, deliver each trustee their key share with instructions for
-      reconstruction.
+    * Queue check-in prompts, grace reminders, trustee invites and release
+      notices into a transactional outbox (``outbox.queue_email``); the UNIQUE
+      ``dedupe_key`` makes each decision exactly-once (NFR-REL-3).
+    * Deliver queued mail through an ``EmailSender`` strategy: ``LogSender``
+      (EMAIL_MODE=log, in-app Outbox only) or ``ResendSender`` (EMAIL_MODE=resend).
 
-Transport: SMTP email in v1. Non-goals for v1 explicitly exclude SMS and push
-notifications (see the SRS non-goals). Templates and delivery are isolated here
-so the scheduler and api layers depend only on an abstract notifier.
-
-Week 1 status: scaffold only.
+Emails never contain secret material: release notices carry a link, and the
+trustee fetches their *encrypted* blob (FR-7). Email only, no SMS (NG-1).
 """
 
 __all__: list[str] = []

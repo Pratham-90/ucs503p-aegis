@@ -1,0 +1,14 @@
+# Ruff config for the Aegis Python code (kept separate from the template's pyproject.toml).
+target-version = "py312"
+line-length = 120
+extend-exclude = ["frontend", "site", "code/spikes", ".venv"]
+
+[lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[lint.isort]
+known-first-party = ["crypto", "scheduler", "vault", "notifications", "api"]
+
+[lint.flake8-bugbear]
+# FastAPI's dependency-injection idiom puts calls in argument defaults.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header"]
