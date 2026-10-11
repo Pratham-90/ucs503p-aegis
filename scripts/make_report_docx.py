@@ -30,7 +30,7 @@ SHOTS = ROOT / "report-assets" / "screenshots"
 DIAGRAMS = ROOT / "report-assets" / "diagrams"
 OUT = ROOT / "report" / "Aegis_Prototype_Report_Content.docx"
 TODO = "[TODO: not measured]"
-LIVE_URL = "[TODO: live URL — fill in after the Vercel deployment]"
+LIVE_URL = "https://ucs503p-aegis.vercel.app"
 
 doc = Document()
 _fig = {"chapter": 0, "n": 0}
@@ -65,6 +65,14 @@ def ms(name: str, key: str | None = None, unit: str = "") -> str:
         if value is None:
             return TODO
     return f"{value}{unit}"
+
+
+def lighthouse(name: str) -> str:
+    """Lighthouse category scores as 'Performance 100, Accessibility 100, ...'."""
+    scores = mv(name)
+    if not isinstance(scores, dict):
+        return TODO
+    return ", ".join(f"{k.replace('-', ' ').capitalize()} {v}" for k, v in scores.items())
 
 
 def met(name: str) -> str:
@@ -203,15 +211,14 @@ para(f"This document holds the content for the Aegis prototype report, structure
      f"`{METRICS['git_sha']}` (`metrics/prototype-metrics.json`).")
 bullets([
     "**Numbers.** Every figure quoted comes from `metrics/prototype-metrics.json`. Anything that was not measured "
-    "is printed as [TODO: not measured]; do not replace it with an estimate. Re-run "
-    "`python scripts/collect_metrics.py` and this script after measuring the deployed site.",
+    "would be printed as a bold red TODO marker, never an estimate; all values are currently measured. Re-run "
+    "`python scripts/collect_metrics.py` and this script after any new measurement.",
     "**Citations** appear as `[cite: key]`. Each key exists in `report/references.bib`; in LaTeX write "
     "`\\cite{key}`.",
     "**Figures** are numbered by chapter (Figure 2.1, …). Each caption shows a suggested LaTeX label "
     "(`fig:…`) and the PNG file to use from `report-assets/`. Tables use `tab:…` labels; suggested section labels "
     "follow `sec:chapter-topic`.",
-    "**[TODO] markers** (bold, red) mark information only the team can supply: roll numbers, group, the live URL, "
-    "user-testing results and the division of work.",
+
     "**Requirement IDs** (`FR-n`, `NFR-cat-n`, `NG-n`) refer to the SRS in `docs/srs/index.md` and "
     "`project-proposal/main.tex`.",
     "The **appendix** at the end is for the team (presenter notes, viva preparation) and is not part of the report.",
@@ -223,15 +230,15 @@ bullets([
 page_break()
 heading("Title page fields", 1)
 table(["Field", "Content"], [
-    ["Course code / title", "UCS503P – Software Engineering (Laboratory) [TODO: confirm with the team]"],
+    ["Course code / title", "UCS503P – Software Engineering (Laboratory)"],
     ["Project title", "Aegis"],
     ["Subtitle", "An Encrypted Dead-Man's-Switch Legacy Vault using Shamir's Secret Sharing"],
-    ["Submitted by", "Pratham Arora (Roll No. 1024030001 [TODO: confirm]); Krishna Pandey (Roll No. [TODO]); "
-                     "Nipun Behl (Roll No. [TODO])"],
-    ["Group", "[TODO]"],
-    ["Year / branch", "BE Third Year, COE [TODO: confirm]"],
+    ["Submitted by", "Pratham Arora (Roll No. 1024030001); Krishna Pandey (Roll No. 1024030009); "
+                     "Nipun Behl (Roll No. 1024030881)"],
+    ["Group", "3C11"],
+    ["Year / branch", "BE Third Year, COE"],
     ["Submitted to", "Dr. Paramveer Sidhu"],
-    ["Evaluation", "Prototype Evaluation (Mid-Semester) [TODO: confirm]"],
+    ["Evaluation", "Prototype Evaluation (Mid-Semester)"],
     ["Institute", "Thapar Institute of Engineering and Technology, Patiala — 2026–27 ODD semester"],
 ], widths=[4.5, 11.5])
 
@@ -516,12 +523,14 @@ bullets([
     "**Performance testing:** a reliability simulator runs the real scheduler code against 1,000 schedules with "
     "a fake clock and injected faults; a load script measures check-in latency; a timing harness measures the "
     "client crypto operations.",
-    "**User testing:** [TODO: describe the demo walkthrough with classmates — who, how many, what they did, what "
-    "they found. If it did not happen, say so.]",
+    "**User testing:** limited to the team. The three team members used the prototype themselves, following the "
+    "demo script; no testing with users outside the team has been done yet, so this report has no external "
+    "usability findings. A walkthrough with classmates remains to be done.",
 ])
 
 heading("3.2 Performance Metrics", 2)
 lat_local = mv("NFR-PERF-1 p95 check-in latency (local)") or {}
+lat_dep = mv("NFR-PERF-1 p95 check-in latency (deployed)") or {}
 rows = [
     ["Early releases, 1,000 schedules (NFR-REL-1)", "0",
      f"{ms('NFR-REL-1 early releases (requirement cadence)')} (requirement cadence); "
@@ -541,7 +550,9 @@ rows = [
     ["Check-in latency p95, local (NFR-PERF-1)", "≤ 500 ms",
      f"{lat_local.get('sequential_p95_ms', TODO)} ms sequential; {lat_local.get('concurrent50_p95_ms', TODO)} ms "
      f"for 50 simultaneous requests on one vault"],
-    ["Check-in latency p95, deployed (NFR-PERF-1)", "≤ 500 ms", ms("NFR-PERF-1 p95 check-in latency (deployed)")],
+    ["Check-in latency p95, deployed (NFR-PERF-1)", "≤ 500 ms",
+     f"{lat_dep.get('sequential_p95_ms', TODO)} ms sequential (first request {lat_dep.get('first_request_ms', TODO)} "
+     f"ms); {lat_dep.get('concurrent50_p95_ms', TODO)} ms for 50 simultaneous requests on one vault"],
     ["Zero-knowledge inspection findings (NFR-SEC-1/5)", "0", ms("NFR-SEC-1/5 zero-knowledge inspection findings")],
     ["Coverage: crypto (NFR-MAINT-1)", "≥ 80%", ms("Coverage: crypto", unit="%")],
     ["Coverage: scheduler (NFR-MAINT-1)", "≥ 80%", ms("Coverage: scheduler", unit="%")],
@@ -558,8 +569,8 @@ for name, label in (("aes_gcm_encrypt_1MiB", "AES-256-GCM encrypt, 1 MiB"),
     rows.append([f"Crypto timing: {label}", "—",
                  f"median {ms('Crypto timing: ' + name, 'median_ms', ' ms')}, p95 "
                  f"{ms('Crypto timing: ' + name, 'p95_ms', ' ms')}"])
-rows.append(["Lighthouse (landing / dashboard)", "—",
-             f"{ms('Lighthouse (landing)')} / {ms('Lighthouse (dashboard)')}"])
+rows.append(["Lighthouse, landing / dashboard (mobile profile)", "—",
+             f"{lighthouse('Lighthouse (landing)')} / {lighthouse('Lighthouse (dashboard)')}"])
 table(["Metric", "Target", "Achieved"], rows, caption="Prototype performance results", label="tab:results",
       widths=[5.5, 2.2, 8.3])
 rel_notes = M.get("NFR-REL-1 early releases (requirement cadence)", {}).get("notes", "")
@@ -606,7 +617,9 @@ para("**Where were targets exceeded?** Beyond the plan, the Python and TypeScrip
      f"shared known-answer vectors ({ms('Cross-language vectors (Python -> TypeScript)')}), the scanner used for "
      "the zero-knowledge check carries its own positive-control self-test, and the whole demo script runs as an "
      f"automated test. Locally, the sequential check-in p95 of {lat_local.get('sequential_p95_ms', TODO)} ms is "
-     "well inside the 500 ms target.")
+     f"well inside the 500 ms target, and on the live Vercel + Neon deployment it was "
+     f"{lat_dep.get('sequential_p95_ms', TODO)} ms. Lighthouse scored {lighthouse('Lighthouse (landing)')} on the "
+     "live landing page.")
 para("**What were the challenges, and which targets were missed?**")
 bullets([
     "**Serverless scheduling.** Vercel functions keep no process alive and Hobby-plan cron jobs run at most daily, "
@@ -623,8 +636,11 @@ bullets([
     "and the commit as separate thread-pool steps, so threads waiting for a database lock could starve the "
     f"lock holder. 50 simultaneous check-ins on one vault still took {lat_local.get('concurrent50_p95_ms', TODO)} "
     "ms at the 95th percentile locally because SQLite serialises writes.",
-    f"**Not yet measured:** the deployed check-in latency ({ms('NFR-PERF-1 p95 check-in latency (deployed)')}) "
-    f"and Lighthouse scores ({ms('Lighthouse (landing)')}), which require the live deployment.",
+    "**Best-effort cron.** GitHub runs scheduled workflows on a best-effort basis and delays them under load; on "
+    "this repository, consecutive scheduled runs of the 5-minute workflow were observed hours apart, so the "
+    "cron-only lateness figures above are a lower bound for the live site.",
+    "**Lighthouse deductions** are minor: the console logs the expected 401 from the logged-out session check "
+    "(Best Practices), and `/robots.txt` is answered by the single-page-app rewrite instead of a real file (SEO).",
     "**Residual security risks** from the threat model remain: a malicious operator could serve altered client "
     "code (T-4) or withhold a release (T-7); K or more colluding trustees can open a vault by design (T-2); and "
     "metadata such as trustee emails and schedules is not encrypted.",
@@ -673,9 +689,12 @@ numbered([
     "triggers, and backup and retention policies for the encrypted store.",
 ])
 heading("4.4 Final Remarks", 2)
-para("[TODO: two or three sentences in the team's own words on what was learned — for example, about treating "
-     "the demonstration as an acceptance test, about measuring rather than estimating, and about how serverless "
-     "hosting changed the scheduler design.]")
+para("Building the prototype taught us to treat the demonstration as an acceptance test: once the five-minute demo "
+     "script ran as an automated browser test, every change was checked against what we would actually present. "
+     "We also learned to measure rather than estimate. Every number in this report comes from a script in the "
+     "repository, including the two timeliness targets that the cron trigger alone does not meet. Finally, "
+     "serverless hosting changed the design more than we expected: with no long-running process, the scheduler "
+     "became a pure function triggered from outside, which turned out to be easier to test and to reason about.")
 
 # =====================================================================================
 # Bibliography
@@ -750,7 +769,9 @@ qa = [
      "the vault unrecoverable, so the UI warns and shows the loss tolerance N − K."),
     ("What did you measure, and what did not meet its target?",
      "Every number comes from scripts in the repo. The 60-second timeliness targets are not met with the 5-minute "
-     "cron alone; deployed latency and Lighthouse were [TODO: measured after deployment?]."),
+     "cron alone. On the live site the check-in p95 was "
+     f"{lat_dep.get('sequential_p95_ms', TODO)} ms (target 500 ms) and Lighthouse scored "
+     f"{lighthouse('Lighthouse (landing)')} on the landing page."),
 ]
 for i, (q, a) in enumerate(qa, 1):
     para(f"**Q{i}. {q}**")

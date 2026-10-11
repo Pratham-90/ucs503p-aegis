@@ -1,0 +1,30 @@
+{
+  "label": "deployed",
+  "base_url": "https://ucs503p-aegis.vercel.app",
+  "measured_at": "2026-10-11T09:51:52+00:00",
+  "first_request_ms": 295.8,
+  "sequential": {
+    "n": 200,
+    "p50_ms": 307.8,
+    "p95_ms": 352.3,
+    "p99_ms": 509.1,
+    "mean_ms": 313.3,
+    "max_ms": 514.9
+  },
+  "concurrent": {
+    "n": 50,
+    "p50_ms": 2322.4,
+    "p95_ms": 2918.9,
+    "p99_ms": 2942.9,
+    "mean_ms": 2001.1,
+    "max_ms": 2942.9
+  },
+  "all_warm": {
+    "n": 250,
+    "p50_ms": 314.2,
+    "p95_ms": 2635.9,
+    "p99_ms": 2918.9,
+    "mean_ms": 650.8,
+    "max_ms": 2942.9
+  }
+}

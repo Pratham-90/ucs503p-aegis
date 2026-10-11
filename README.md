@@ -21,7 +21,7 @@ ciphertext and encrypted shares; it is trusted to keep time, never to read.
 
 | | |
 | --- | --- |
-| **Live URL** | **TODO** — not deployed yet. Set after the first Vercel deployment (see [Deploy](#deploy-to-vercel)). |
+| **Live URL** | https://ucs503p-aegis.vercel.app (Vercel + Neon Postgres, deployed from `main`) |
 | Demo script | All 9 steps work end to end locally; verified by the Playwright test (`frontend/e2e/demo.spec.ts`). |
 | Measurements | [`metrics/README.md`](metrics/README.md) — every value from a script that was actually run. |
 

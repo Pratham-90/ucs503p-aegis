@@ -1,0 +1,12 @@
+{
+  "scores": {
+    "performance": 100,
+    "accessibility": 100,
+    "best-practices": 96,
+    "seo": 91
+  },
+  "command": "node scripts/lighthouse.mjs --base-url https://ucs503p-aegis.vercel.app",
+  "environment": "deployed: https://ucs503p-aegis.vercel.app (Vercel), headless Chrome 155.0.0.0",
+  "measured_at": "2026-10-11T09:30:46+00:00",
+  "notes": "Lighthouse 13.5.0, mobile profile, simulate throttling; final URL https://ucs503p-aegis.vercel.app/login; logged out, so the SPA redirects to /login; audits below full score: First Contentful Paint; Speed Index; Browser errors were logged to the console; robots.txt is not valid"
+}
