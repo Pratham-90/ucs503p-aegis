@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-10-08T14:12:06+00:00",
+  "generated_at": "2026-10-11T09:52:52+00:00",
   "generated_by": "scripts/collect_metrics.py",
-  "git_sha": "0f68a23",
+  "git_sha": "b0d230d",
   "metrics": {
     "Python tests (unit + integration)": {
       "value": "125/125 passed",
       "target": "all pass",
       "met": true,
       "command": "python -m pytest code/tests --cov=code/crypto --cov=code/scheduler ...",
-      "measured_at": "2026-10-08T14:11:59+00:00",
+      "measured_at": "2026-10-11T09:52:42+00:00",
       "environment": "local: Windows 11, Python 3.12.13"
     },
     "Coverage: crypto": {
@@ -18,7 +18,7 @@
       "met": true,
       "requirement": "NFR-MAINT-1",
       "command": "python -m pytest code/tests --cov=code/crypto --cov=code/scheduler ...",
-      "measured_at": "2026-10-08T14:12:00+00:00",
+      "measured_at": "2026-10-11T09:52:42+00:00",
       "environment": "local: Windows 11, Python 3.12.13"
     },
     "Coverage: scheduler": {
@@ -28,28 +28,28 @@
       "met": true,
       "requirement": "NFR-MAINT-1",
       "command": "python -m pytest code/tests --cov=code/crypto --cov=code/scheduler ...",
-      "measured_at": "2026-10-08T14:12:00+00:00",
+      "measured_at": "2026-10-11T09:52:42+00:00",
       "environment": "local: Windows 11, Python 3.12.13"
     },
     "Coverage: api": {
       "value": 94.1,
       "unit": "%",
       "command": "python -m pytest code/tests --cov=code/crypto --cov=code/scheduler ...",
-      "measured_at": "2026-10-08T14:12:00+00:00",
+      "measured_at": "2026-10-11T09:52:42+00:00",
       "environment": "local: Windows 11, Python 3.12.13"
     },
     "Coverage: vault": {
       "value": 98.4,
       "unit": "%",
       "command": "python -m pytest code/tests --cov=code/crypto --cov=code/scheduler ...",
-      "measured_at": "2026-10-08T14:12:00+00:00",
+      "measured_at": "2026-10-11T09:52:42+00:00",
       "environment": "local: Windows 11, Python 3.12.13"
     },
     "Coverage: notifications": {
       "value": 79.0,
       "unit": "%",
       "command": "python -m pytest code/tests --cov=code/crypto --cov=code/scheduler ...",
-      "measured_at": "2026-10-08T14:12:00+00:00",
+      "measured_at": "2026-10-11T09:52:42+00:00",
       "environment": "local: Windows 11, Python 3.12.13"
     },
     "Hypothesis property tests": {
@@ -62,7 +62,7 @@
       "met": true,
       "requirement": "FR-4, FR-8, NFR-SEC-2, NFR-REL-1, NFR-REL-3",
       "command": "pytest test_crypto_properties.py test_scheduler_state.py --hypothesis-show-statistics",
-      "measured_at": "2026-10-08T14:12:04+00:00",
+      "measured_at": "2026-10-11T09:52:46+00:00",
       "environment": "local: Windows 11, Python 3.12.13"
     },
     "TypeScript tests (vitest)": {
@@ -70,7 +70,7 @@
       "target": "all pass",
       "met": true,
       "command": "cd frontend && npx vitest run",
-      "measured_at": "2026-10-08T14:12:06+00:00",
+      "measured_at": "2026-10-11T09:52:52+00:00",
       "environment": "local: Windows 11, Python 3.12.13"
     },
     "Cross-language vectors (Python -> TypeScript)": {
@@ -79,7 +79,7 @@
       "met": true,
       "requirement": "FR-2a, FR-8",
       "command": "cd frontend && npx vitest run src/crypto/vectors.test.ts",
-      "measured_at": "2026-10-08T14:12:06+00:00",
+      "measured_at": "2026-10-11T09:52:52+00:00",
       "environment": "local: Windows 11, Python 3.12.13"
     },
     "End-to-end demo script (Playwright)": {
@@ -87,9 +87,9 @@
       "target": "pass",
       "met": true,
       "command": "cd frontend && npx playwright test",
-      "measured_at": "2026-10-08T13:21:57Z",
+      "measured_at": "2026-10-08T21:30:22Z",
       "environment": "local: Windows 11, Python 3.12.13, Chromium (Playwright)",
-      "notes": "duration 15.5 s; 22 screenshots in report-assets/screenshots/"
+      "notes": "duration 14.7 s; 22 screenshots in report-assets/screenshots/"
     },
     "NFR-REL-1 early releases (requirement cadence)": {
       "value": 0,
@@ -216,13 +216,21 @@
       "notes": "'nominal load' = sequential requests; 50 simultaneous check-ins on one vault serialise on the database and are reported separately"
     },
     "NFR-PERF-1 p95 check-in latency (deployed)": {
-      "value": "TODO: not measured",
-      "target": "p95 <= 500 ms",
+      "value": {
+        "sequential_p50_ms": 307.8,
+        "sequential_p95_ms": 352.3,
+        "sequential_p99_ms": 509.1,
+        "concurrent50_p95_ms": 2918.9,
+        "first_request_ms": 295.8
+      },
+      "unit": "ms",
+      "target": "p95 <= 500 ms (nominal load)",
+      "met": true,
       "requirement": "NFR-PERF-1",
       "command": "python scripts/load_checkin.py --base-url <url> --label deployed",
-      "measured_at": "\u2014",
-      "environment": "\u2014",
-      "notes": "needs the deployed URL"
+      "measured_at": "2026-10-11T09:51:52+00:00",
+      "environment": "deployed: https://ucs503p-aegis.vercel.app",
+      "notes": "'nominal load' = sequential requests; 50 simultaneous check-ins on one vault serialise on the database and are reported separately"
     },
     "Crypto timing: aes_gcm_encrypt_1MiB": {
       "value": {
@@ -335,18 +343,28 @@
       "environment": "Node.js v24.21.0 Web Crypto (win32/x64)"
     },
     "Lighthouse (landing)": {
-      "value": "TODO: not measured",
-      "command": "scripts/lighthouse.mjs",
-      "measured_at": "\u2014",
-      "environment": "\u2014",
-      "notes": "run against the deployed URL"
+      "value": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 96,
+        "seo": 91
+      },
+      "command": "node scripts/lighthouse.mjs --base-url https://ucs503p-aegis.vercel.app",
+      "measured_at": "2026-10-11T09:30:30+00:00",
+      "environment": "deployed: https://ucs503p-aegis.vercel.app (Vercel), headless Chrome 155.0.0.0",
+      "notes": "Lighthouse 13.5.0, mobile profile, simulate throttling; final URL https://ucs503p-aegis.vercel.app/; audits below full score: First Contentful Paint; Speed Index; Browser errors were logged to the console; robots.txt is not valid"
     },
     "Lighthouse (dashboard)": {
-      "value": "TODO: not measured",
-      "command": "scripts/lighthouse.mjs",
-      "measured_at": "\u2014",
-      "environment": "\u2014",
-      "notes": "run against the deployed URL"
+      "value": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 96,
+        "seo": 91
+      },
+      "command": "node scripts/lighthouse.mjs --base-url https://ucs503p-aegis.vercel.app",
+      "measured_at": "2026-10-11T09:30:46+00:00",
+      "environment": "deployed: https://ucs503p-aegis.vercel.app (Vercel), headless Chrome 155.0.0.0",
+      "notes": "Lighthouse 13.5.0, mobile profile, simulate throttling; final URL https://ucs503p-aegis.vercel.app/login; logged out, so the SPA redirects to /login; audits below full score: First Contentful Paint; Speed Index; Browser errors were logged to the console; robots.txt is not valid"
     }
   }
 }

@@ -15,8 +15,11 @@ assistant (Claude Code) working from the team's brief; every such commit carries
 a `Co-Authored-By` trailer. The team's own contributions this week are recorded
 below.
 
-**Who did what:** TODO (team to fill in: review, testing on devices, demo
-rehearsal, report writing, deployment).
+**Who did what:**
+
+- Pratham Arora: review and testing.
+- Krishna Pandey: deployment.
+- Nipun Behl: report writing.
 
 ## What was built
 
@@ -79,14 +82,21 @@ rehearsal, report writing, deployment).
   13–14 minutes with the 5-minute cron alone: NFR-REL-2 / NFR-PERF-2 are **not met**
   by the cron trigger by itself.
 - Zero-knowledge inspection: **0 findings**.
-- Check-in p95 23.7 ms locally (sequential); deployed latency not yet measured.
+- Check-in p95 23.7 ms locally (sequential) and **352.3 ms on the live
+  deployment** (target 500 ms).
+- Lighthouse on the live site (mobile profile): Performance 100, Accessibility
+  100, Best Practices 96, SEO 91.
+
+## Deployment (done after the week)
+
+Deployed from `main` to https://ucs503p-aegis.vercel.app (Vercel + Neon Postgres),
+with the 5-minute GitHub Actions tick and a seeded demo vault. GitHub runs
+scheduled workflows on a best-effort basis: scheduled runs were observed hours
+apart, so the live release lateness can exceed the cron-only figures above.
 
 ## What's open
 
-- **Deploy to Vercel** (needs the team's Vercel account, Neon, env vars and the
-  GitHub secrets for the tick workflow), then measure the deployed latency and
-  Lighthouse scores.
-- Fill in "who did what" above and the `[TODO]` fields in the report file.
+- User testing beyond the team: so far only the three of us have used the demo.
 - Future work recorded in the report: multiple vaults, account recovery, large
   files, 2FA, a production email domain, rate limiting, constant-time crypto,
   verifiable secret sharing, Alembic migrations.
