@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, ApiError } from "../api";
-import { Alert, Card } from "../components/ui";
+import { Alert, Card, linkClass } from "../components/ui";
 
 /** One-click check-in from the emailed link (FR-6, NFR-USE-1): opening the link *is* the action. */
 export function CheckinLink() {
@@ -33,7 +33,7 @@ export function CheckinLink() {
       <Card title="Aegis check-in">
         {result ? <Alert kind={result.kind}>{result.text}</Alert> : <p className="text-sm text-slate-600 dark:text-slate-400">Confirming…</p>}
         <p className="mt-4 text-sm">
-          <Link className="font-semibold text-indigo-700 dark:text-indigo-300" to="/dashboard">Open your dashboard</Link>
+          <Link className={linkClass} to="/dashboard">Open your dashboard</Link>
         </p>
       </Card>
     </div>

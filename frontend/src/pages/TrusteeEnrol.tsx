@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, errorMessage } from "../api";
-import { Alert, Button, Card } from "../components/ui";
+import { Alert, Button, buttonClass, Card, linkClass } from "../components/ui";
 import { generateTrusteeKeyPair, publicPart } from "../crypto/rsa";
 import { downloadText, KEY_FILE_FORMAT, rememberKey, rememberTrusteeToken, type TrusteeKeyFile } from "../keystore";
 
@@ -64,7 +64,7 @@ export function TrusteeEnrol() {
         {error && <Alert kind="error">{error}</Alert>}
         {info && !keyFile && info.enrolled && (
           <Alert kind="success">
-            You have already enrolled. Keep your key file safe. <Link className="font-semibold underline" to={`/trustee?t=${token}`}>Open the trustee portal</Link>.
+            You have already enrolled. Keep your key file safe. <Link className={linkClass} to={`/trustee?t=${token}`}>Open the trustee portal</Link>.
           </Alert>
         )}
         {info && !info.enrolled && !info.can_enrol && <Alert kind="warning">This vault is already sealed; enrolment is closed.</Alert>}
@@ -78,7 +78,7 @@ export function TrusteeEnrol() {
               The vault opens only if its owner stops checking in <em>and</em> {info.k} of the {info.n} trustees combine their shares.
             </p>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+              <input type="checkbox" className="h-4 w-4 accent-indigo-600" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
               Also remember the key in this browser (IndexedDB)
             </label>
             <Button onClick={enrol} busy={busy} data-testid="enrol-button">Generate my keypair &amp; enrol</Button>
@@ -93,7 +93,7 @@ export function TrusteeEnrol() {
               <Button variant="secondary" onClick={() => downloadText(fileName(keyFile), JSON.stringify(keyFile, null, 2))}>
                 Download key file again
               </Button>
-              <Link to={`/trustee?t=${token}`} className="inline-flex rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
+              <Link to={`/trustee?t=${token}`} className={buttonClass("primary")}>
                 Open trustee portal
               </Link>
             </div>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, errorMessage, type VaultState } from "../api";
-import { Alert, Button, Card, CopyButton, Field, inputClass, Mono, StateBadge } from "../components/ui";
+import { Alert, Button, buttonClass, Card, CopyButton, Field, fileInputClass, inputClass, Mono, PageHeader, StateBadge } from "../components/ui";
 import { shareToText } from "../crypto/encoding";
 import { decryptMyShare } from "../crypto/vault";
 import { downloadText, knownTrusteeTokens, parseKeyFile, recallKey, rememberTrusteeToken, type TrusteeKeyFile } from "../keystore";
@@ -75,7 +75,7 @@ function VaultCard({ token, vault }: { token: string; vault: GuardedVault }) {
             <p className="text-sm text-emerald-700 dark:text-emerald-400">Private key loaded ({keyFile.email}).</p>
           ) : (
             <Field label="Load your private key file (aegis-trustee-….json)">
-              <input aria-label="Private key file" type="file" accept=".json,application/json" className="text-sm" onChange={(e) => void loadFile(e.target.files)} />
+              <input aria-label="Private key file" type="file" accept=".json,application/json" className={fileInputClass} onChange={(e) => void loadFile(e.target.files)} />
             </Field>
           )}
           <Button onClick={decrypt} busy={busy} disabled={!keyFile} data-testid="decrypt-share">
@@ -90,7 +90,7 @@ function VaultCard({ token, vault }: { token: string; vault: GuardedVault }) {
                 <Button variant="secondary" onClick={() => downloadText(`aegis-share-${vault.your_position}.txt`, share, "text/plain")}>
                   Download share
                 </Button>
-                <Link to={`/recover?t=${token}`} className="inline-flex rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
+                <Link to={`/recover?t=${token}`} className={buttonClass("primary")}>
                   Open Recovery Room
                 </Link>
               </div>
@@ -139,10 +139,9 @@ export function TrusteePortal() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Trustee portal</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">Vaults you guard, and their state. No secrets are shown here until a vault is released.</p>
-      </div>
+      <PageHeader eyebrow="For trustees" title="Trustee portal">
+        Vaults you guard, and their state. No secrets are shown here until a vault is released.
+      </PageHeader>
       {Object.entries(vaults).map(([t, v]) => <VaultCard key={v.vault_id} token={t} vault={v} />)}
       {Object.keys(vaults).length === 0 && <Alert kind="info">No vaults found for this browser yet.</Alert>}
       {errors.map((e) => <Alert key={e} kind="error">{e}</Alert>)}

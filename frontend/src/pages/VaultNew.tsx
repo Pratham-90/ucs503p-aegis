@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, errorMessage, type Invite, type ServerView, type VaultSummary } from "../api";
-import { Alert, Button, Card, CopyButton, Field, formatDuration, inputClass, Mono } from "../components/ui";
+import { Alert, Button, buttonClass, Card, CopyButton, Field, fileInputClass, formatDuration, inputClass, Mono, PageHeader } from "../components/ui";
 import { MAX_FILE_BYTES, sealVault, type FileInput, type SealedPayload } from "../crypto/vault";
 
 const PRESETS = [
@@ -145,12 +145,34 @@ export function VaultNew() {
   }
 
   const steps: [Step, string][] = [["configure", "Trustees & schedule"], ["invite", "Enrolment"], ["secret", "Secret"], ["review", "Review"], ["done", "Sealed"]];
+  const current = steps.findIndex(([id]) => id === step);
   return (
     <div className="space-y-6">
-      <ol className="flex flex-wrap gap-2 text-xs font-medium">
+      <PageHeader eyebrow="New vault" title="Set up your vault">
+        Everything secret is encrypted in this browser. The server only ever receives ciphertext.
+      </PageHeader>
+      <ol className="glass flex flex-wrap gap-1 rounded-2xl p-1.5 text-xs font-medium">
         {steps.map(([id, label], i) => (
-          <li key={id} className={`rounded-full px-3 py-1 ring-1 ${step === id ? "bg-indigo-600 text-white ring-indigo-600" : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 ring-slate-200 dark:ring-slate-700"}`}>
-            {i + 1}. {label}
+          <li
+            key={id}
+            aria-current={i === current ? "step" : undefined}
+            className={`flex items-center gap-2 rounded-xl px-3 py-1.5 ${
+              i === current
+                ? "bg-indigo-600 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.2)]"
+                : i < current
+                  ? "text-slate-700 dark:text-slate-200"
+                  : "text-slate-400 dark:text-slate-500"
+            }`}
+          >
+            <span
+              className={`flex h-5 w-5 items-center justify-center rounded-full font-mono text-[10px] ${
+                i === current ? "bg-white/20" : i < current ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-slate-900/5 dark:bg-white/5"
+              }`}
+              aria-hidden
+            >
+              {i < current ? "✓" : i + 1}
+            </span>
+            {label}
           </li>
         ))}
       </ol>
@@ -229,9 +251,9 @@ export function VaultNew() {
             {vault.trustees.map((t) => {
               const invite = invites[t.id];
               return (
-                <li key={t.id} className="rounded-xl p-3 ring-1 ring-slate-200 dark:ring-slate-700" data-testid={`invite-${t.position}`}>
+                <li key={t.id} className="glass-inset rounded-xl p-3" data-testid={`invite-${t.position}`}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-medium">#{t.position} {t.email}</span>
+                    <span className="text-sm font-medium"><span className="mr-1.5 font-mono text-slate-400 dark:text-slate-500">#{t.position}</span>{t.email}</span>
                     <span className={`text-sm font-semibold ${t.enrolled ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}`}>
                       {t.enrolled ? "✓ enrolled" : "waiting…"}
                     </span>
@@ -240,7 +262,7 @@ export function VaultNew() {
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       {invite ? (
                         <>
-                          <code className="break-all rounded bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs" data-testid="invite-link">{invite.link}</code>
+                          <code className="break-all rounded-lg bg-slate-900/5 px-2 py-1 font-mono text-xs dark:bg-white/5" data-testid="invite-link">{invite.link}</code>
                           <CopyButton text={invite.link} />
                         </>
                       ) : (
@@ -267,7 +289,7 @@ export function VaultNew() {
               <textarea aria-label="Secret message" className={`${inputClass} min-h-40`} value={message} onChange={(e) => setMessage(e.target.value)} />
             </Field>
             <Field label="Attach a file (optional, up to 1 MB)">
-              <input aria-label="Attach a file" type="file" className="text-sm" onChange={(e) => void pickFile(e.target.files)} />
+              <input aria-label="Attach a file" type="file" className={fileInputClass} onChange={(e) => void pickFile(e.target.files)} />
             </Field>
             <Button disabled={!message.trim() && !file} onClick={() => setStep("review")}>Review</Button>
           </div>
@@ -304,7 +326,7 @@ export function VaultNew() {
               <Mono>{JSON.stringify(serverView, null, 2)}</Mono>
             </Card>
           </div>
-          <Link to="/dashboard" className="inline-flex rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+          <Link to="/dashboard" className={buttonClass("primary")}>
             Go to dashboard
           </Link>
         </div>
