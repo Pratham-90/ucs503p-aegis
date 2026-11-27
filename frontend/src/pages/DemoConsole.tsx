@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { api, errorMessage, type ServerView, type VaultState } from "../api";
-import { Alert, Button, Card, Field, inputClass, Mono, StateBadge } from "../components/ui";
+import { Alert, Button, Card, Field, inputClass, linkClass, Mono, PageHeader, StateBadge } from "../components/ui";
 
 interface Email { id: string; to: string; subject: string; body: string; kind: string; status: string; created_at: string }
 interface Tick { id: string; trigger: string; started_at: string; vaults_checked: number; transitions: { vault_id: string; from_state: string; to_state: string; actions: string[] }[] }
@@ -13,7 +13,7 @@ const TOKEN_KEY = "aegis.demoToken";
 function linkify(text: string): ReactNode[] {
   return text.split(/(https?:\/\/\S+)/g).map((part, i) =>
     /^https?:\/\//.test(part) ? (
-      <a key={i} href={part.replace(/^https?:\/\/[^/]+/, "")} className="break-all font-medium text-indigo-700 dark:text-indigo-300 underline">{part}</a>
+      <a key={i} href={part.replace(/^https?:\/\/[^/]+/, "")} className={`break-all ${linkClass}`}>{part}</a>
     ) : (
       <span key={i}>{part}</span>
     ),
@@ -112,40 +112,40 @@ export function DemoConsole() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Demo Console</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Server time {clock ? new Date(clock.server_now).toLocaleTimeString() : "…"}
-            {clock && clock.offset_s > 0 && <> (fast-forwarded {clock.offset_s} s)</>}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={runTick} busy={busy === "tick"} data-testid="run-tick">Run tick now</Button>
-          <Button variant="secondary" onClick={() => advance(60)} busy={busy === "adv60"}>+1 min</Button>
-          <Button variant="secondary" onClick={() => advance(300)} busy={busy === "adv300"}>+5 min</Button>
-          <Button variant="secondary" onClick={() => act("reset-clock", async () => { await api.post("/demo/clock/reset", {}, headers); return "Clock offset cleared."; })}>
-            Reset clock
-          </Button>
-          <Button
-            variant="danger"
-            onClick={() => window.confirm("Delete ALL demo data?") && act("reset", async () => { await api.post("/demo/reset", {}, headers); return "Demo data reset."; })}
-          >
-            Reset demo data
-          </Button>
-          <Button variant="ghost" onClick={() => { sessionStorage.removeItem(TOKEN_KEY); setToken(""); }}>Lock</Button>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Presenter tools"
+        title="Demo Console"
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={runTick} busy={busy === "tick"} data-testid="run-tick">Run tick now</Button>
+            <Button variant="secondary" onClick={() => advance(60)} busy={busy === "adv60"}>+1 min</Button>
+            <Button variant="secondary" onClick={() => advance(300)} busy={busy === "adv300"}>+5 min</Button>
+            <Button variant="secondary" onClick={() => act("reset-clock", async () => { await api.post("/demo/clock/reset", {}, headers); return "Clock offset cleared."; })}>
+              Reset clock
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => window.confirm("Delete ALL demo data?") && act("reset", async () => { await api.post("/demo/reset", {}, headers); return "Demo data reset."; })}
+            >
+              Reset demo data
+            </Button>
+            <Button variant="ghost" onClick={() => { sessionStorage.removeItem(TOKEN_KEY); setToken(""); }}>Lock</Button>
+          </div>
+        }
+      >
+        Server time <span className="font-mono">{clock ? new Date(clock.server_now).toLocaleTimeString() : "…"}</span>
+        {clock && clock.offset_s > 0 && <> (fast-forwarded {clock.offset_s} s)</>}
+      </PageHeader>
       {message && <Alert kind={message.kind}>{message.text}</Alert>}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title={`Outbox (${emails.length})`} subtitle="Every email the system decided to send (in-app mailbox).">
           <ul className="max-h-[32rem] space-y-3 overflow-y-auto pr-1" data-testid="outbox">
             {emails.map((e) => (
-              <li key={e.id} className="rounded-lg p-3 text-sm ring-1 ring-slate-200 dark:ring-slate-700">
+              <li key={e.id} className="glass-inset rounded-xl p-3 text-sm">
                 <div className="flex flex-wrap justify-between gap-2">
                   <span className="font-semibold">{e.subject}</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">{e.kind} · {e.status}</span>
+                  <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">{e.kind} · {e.status}</span>
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">to {e.to} · {new Date(e.created_at).toLocaleTimeString()}</div>
                 <p className="mt-2 whitespace-pre-wrap text-slate-700 dark:text-slate-300">{linkify(e.body)}</p>
@@ -175,7 +175,7 @@ export function DemoConsole() {
           <Card title="Scheduler tick log">
             <ul className="max-h-72 space-y-2 overflow-y-auto text-xs">
               {ticks.map((t) => (
-                <li key={t.id} className="rounded bg-slate-50 dark:bg-slate-800/50 p-2 ring-1 ring-slate-200 dark:ring-slate-700">
+                <li key={t.id} className="glass-inset rounded-lg p-2.5">
                   <span className="font-mono">{new Date(t.started_at).toLocaleTimeString()}</span> · {t.trigger} · checked {t.vaults_checked}
                   {t.transitions.map((tr) => (
                     <div key={tr.vault_id + tr.to_state} className="mt-1 text-slate-700 dark:text-slate-300">
@@ -194,14 +194,14 @@ export function DemoConsole() {
         {metrics ? (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead><tr className="text-left text-slate-500 dark:text-slate-400"><th className="py-1 pr-4">Metric</th><th className="pr-4">Value</th><th className="pr-4">Target</th><th>Met</th></tr></thead>
+              <thead><tr className="text-left font-mono text-[11px] uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400"><th className="py-2 pr-4 font-medium">Metric</th><th className="pr-4 font-medium">Value</th><th className="pr-4 font-medium">Target</th><th className="font-medium">Met</th></tr></thead>
               <tbody>
                 {Object.entries(metrics).map(([name, m]) => (
-                  <tr key={name} className="border-t border-slate-100 dark:border-slate-800">
-                    <td className="py-1 pr-4 font-medium">{name}</td>
-                    <td className="pr-4 font-mono">{typeof m.value === "object" ? JSON.stringify(m.value) : String(m.value)}{m.unit ? ` ${m.unit}` : ""}</td>
+                  <tr key={name} className="border-t border-slate-900/5 dark:border-white/5">
+                    <td className="py-2 pr-4 font-medium">{name}</td>
+                    <td className="pr-4 font-mono text-xs">{typeof m.value === "object" ? JSON.stringify(m.value) : String(m.value)}{m.unit ? ` ${m.unit}` : ""}</td>
                     <td className="pr-4 text-slate-600 dark:text-slate-400">{m.target ?? "—"}</td>
-                    <td>{m.met === true ? "✓" : m.met === false ? "✗" : "—"}</td>
+                    <td className={m.met === true ? "text-emerald-600 dark:text-emerald-400" : m.met === false ? "text-red-600 dark:text-red-400" : "text-slate-400"}>{m.met === true ? "✓" : m.met === false ? "✗" : "—"}</td>
                   </tr>
                 ))}
               </tbody>

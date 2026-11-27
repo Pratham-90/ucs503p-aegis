@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, errorMessage } from "../api";
 import { useAuth } from "../auth";
-import { Alert, Button, Card, Field, inputClass } from "../components/ui";
+import { Alert, Button, Card, Field, inputClass, linkClass } from "../components/ui";
 
 function AuthForm({ mode }: { mode: "register" | "login" }) {
   const [email, setEmail] = useState("");
@@ -29,7 +29,7 @@ function AuthForm({ mode }: { mode: "register" | "login" }) {
 
   const isRegister = mode === "register";
   return (
-    <div className="mx-auto max-w-md">
+    <div className="mx-auto max-w-md pt-4 sm:pt-10">
       <Card title={isRegister ? "Create your account" : "Log in"} subtitle={isRegister ? "You are the Owner of the vault." : undefined}>
         <form className="space-y-4" onSubmit={submit}>
           <Field label="Email">
@@ -53,9 +53,9 @@ function AuthForm({ mode }: { mode: "register" | "login" }) {
         </form>
         <p className="mt-4 text-center text-sm text-slate-600 dark:text-slate-400">
           {isRegister ? (
-            <>Already registered? <Link className="font-semibold text-indigo-700 dark:text-indigo-300" to="/login">Log in</Link></>
+            <>Already registered? <Link className={linkClass} to="/login">Log in</Link></>
           ) : (
-            <>New here? <Link className="font-semibold text-indigo-700 dark:text-indigo-300" to="/register">Create an account</Link></>
+            <>New here? <Link className={linkClass} to="/register">Create an account</Link></>
           )}
         </p>
       </Card>

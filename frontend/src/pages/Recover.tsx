@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, errorMessage } from "../api";
-import { Alert, Button, Card, Field, inputClass } from "../components/ui";
+import { Alert, Button, Card, Field, fileInputClass, inputClass, PageHeader } from "../components/ui";
 import { parseShares, recoverVault, RecoveryError, type RecoveredPayload } from "../crypto/vault";
 import { downloadText } from "../keystore";
 
@@ -68,12 +68,9 @@ export function Recover() {
   const provided = shares.filter((s) => s.trim()).length;
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Recovery Room</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          Paste at least K shares. The key is reconstructed and the vault decrypted in this browser — nothing you paste is sent anywhere.
-        </p>
-      </div>
+      <PageHeader eyebrow="For trustees" title="Recovery Room">
+        Paste at least K shares. The key is reconstructed and the vault decrypted in this browser — nothing you paste is sent anywhere.
+      </PageHeader>
 
       {!payload && (
         <Card title="1. Which vault?" subtitle="Use a trustee link (from the portal or the release email).">
@@ -101,7 +98,7 @@ export function Recover() {
             <div className="flex flex-wrap items-center gap-3">
               <Button variant="secondary" type="button" onClick={() => setShares([...shares, ""])}>Add a share</Button>
               <label className="text-sm text-slate-600 dark:text-slate-400">
-                or upload share files <input aria-label="Share files" type="file" multiple accept=".txt,text/plain" className="ml-2 text-sm" onChange={(e) => void addFromFiles(e.target.files)} />
+                or upload share files <input aria-label="Share files" type="file" multiple accept=".txt,text/plain" className={`ml-2 ${fileInputClass}`} onChange={(e) => void addFromFiles(e.target.files)} />
               </label>
             </div>
             {provided > 0 && provided < payload.k && (
@@ -118,7 +115,7 @@ export function Recover() {
 
       {result && (
         <Card title="Vault opened" subtitle="Decrypted in this browser.">
-          <div className="whitespace-pre-wrap rounded-lg bg-emerald-50 dark:bg-emerald-500/10 p-4 text-slate-900 dark:text-slate-100 ring-1 ring-emerald-200 dark:ring-emerald-500/30" data-testid="recovered-message">
+          <div className="whitespace-pre-wrap rounded-xl bg-emerald-500/10 p-4 text-slate-900 ring-1 ring-inset ring-emerald-600/20 dark:text-slate-100 dark:ring-emerald-400/25" data-testid="recovered-message">
             {result.message || <em className="text-slate-500 dark:text-slate-400">(no message)</em>}
           </div>
           {result.file && (

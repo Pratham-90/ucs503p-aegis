@@ -3,11 +3,20 @@ import type { VaultState } from "../api";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600 disabled:bg-indigo-300 dark:hover:bg-indigo-500 dark:focus-visible:outline-indigo-400 dark:disabled:bg-indigo-900 dark:disabled:text-indigo-300",
-  secondary: "bg-white text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 disabled:text-slate-400 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600 dark:hover:bg-slate-700 dark:disabled:text-slate-500",
-  danger: "bg-red-600 text-white hover:bg-red-700 focus-visible:outline-red-600 disabled:bg-red-300 dark:hover:bg-red-500 dark:focus-visible:outline-red-400 dark:disabled:bg-red-900 dark:disabled:text-red-300",
-  ghost: "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+  primary:
+    "bg-indigo-600 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_8px_20px_-8px_rgb(79_70_229/0.7)] hover:bg-indigo-500 focus-visible:outline-indigo-500 disabled:bg-indigo-600/40 disabled:text-white/70 disabled:shadow-none",
+  secondary:
+    "glass-inset text-slate-800 hover:bg-white/80 focus-visible:outline-indigo-500 disabled:text-slate-400 dark:text-slate-100 dark:hover:bg-white/10 dark:disabled:text-slate-500",
+  danger:
+    "bg-red-600 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.18)] hover:bg-red-500 focus-visible:outline-red-500 disabled:bg-red-600/40",
+  ghost:
+    "text-slate-600 hover:bg-slate-900/5 hover:text-slate-900 focus-visible:outline-indigo-500 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white",
 };
+
+/** Classes for a button, also used for router Links that act as buttons. */
+export function buttonClass(variant: Variant = "primary", extra = "") {
+  return `inline-flex items-center justify-center gap-2 rounded-xl border border-transparent px-4 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed ${VARIANTS[variant]} ${extra}`;
+}
 
 export function Button({
   variant = "primary",
@@ -17,11 +26,7 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; busy?: boolean }) {
   return (
-    <button
-      {...props}
-      disabled={props.disabled || busy}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed ${VARIANTS[variant]} ${className}`}
-    >
+    <button {...props} disabled={props.disabled || busy} className={buttonClass(variant, className)}>
       {busy && <Spinner />}
       {children}
     </button>
@@ -40,11 +45,11 @@ export function Card({ title, subtitle, children, actions, className = "" }: {
   className?: string;
 }) {
   return (
-    <section className={`rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6 dark:bg-slate-900 dark:shadow-none dark:ring-slate-800 ${className}`}>
+    <section className={`glass rounded-2xl p-5 sm:p-6 ${className}`}>
       {(title || actions) && (
-        <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div>
-            {title && <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h2>}
+            {title && <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">{title}</h2>}
             {subtitle && <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{subtitle}</p>}
           </div>
           {actions}
@@ -55,16 +60,45 @@ export function Card({ title, subtitle, children, actions, className = "" }: {
   );
 }
 
+/** Page title block: a small mono eyebrow, the h1 and one line of context. */
+export function PageHeader({ eyebrow, title, children, actions }: {
+  eyebrow: string;
+  title: ReactNode;
+  children?: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="max-w-3xl">
+        <p className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-300">{eyebrow}</p>
+        <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white">{title}</h1>
+        {children && <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{children}</p>}
+      </div>
+      {actions}
+    </div>
+  );
+}
+
 const ALERTS = {
-  info: "bg-indigo-50 text-indigo-900 ring-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-200 dark:ring-indigo-500/30",
-  success: "bg-emerald-50 text-emerald-900 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/30",
-  warning: "bg-amber-50 text-amber-900 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/30",
-  error: "bg-red-50 text-red-900 ring-red-200 dark:bg-red-500/10 dark:text-red-200 dark:ring-red-500/30",
+  info: "bg-indigo-500/10 text-indigo-950 ring-indigo-500/20 dark:text-indigo-100 dark:ring-indigo-400/25",
+  success: "bg-emerald-500/10 text-emerald-950 ring-emerald-600/20 dark:text-emerald-100 dark:ring-emerald-400/25",
+  warning: "bg-amber-500/12 text-amber-950 ring-amber-600/25 dark:text-amber-100 dark:ring-amber-400/25",
+  error: "bg-red-500/10 text-red-950 ring-red-600/20 dark:text-red-100 dark:ring-red-400/25",
+};
+const ALERT_BARS = {
+  info: "bg-indigo-500",
+  success: "bg-emerald-500",
+  warning: "bg-amber-500",
+  error: "bg-red-500",
 };
 
 export function Alert({ kind = "info", children }: { kind?: keyof typeof ALERTS; children: ReactNode }) {
   return (
-    <div role={kind === "error" ? "alert" : "status"} className={`rounded-lg p-3 text-sm ring-1 ring-inset ${ALERTS[kind]}`}>
+    <div
+      role={kind === "error" ? "alert" : "status"}
+      className={`relative overflow-hidden rounded-xl py-3 pl-4 pr-3 text-sm ring-1 ring-inset backdrop-blur-sm ${ALERTS[kind]}`}
+    >
+      <span className={`absolute inset-y-0 left-0 w-1 ${ALERT_BARS[kind]}`} aria-hidden />
       {children}
     </div>
   );
@@ -73,15 +107,21 @@ export function Alert({ kind = "info", children }: { kind?: keyof typeof ALERTS;
 export function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-sm font-medium text-slate-800 dark:text-slate-200">{label}</span>
-      <div className="mt-1">{children}</div>
-      {hint && <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">{hint}</span>}
+      <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
+      <div className="mt-1.5">{children}</div>
+      {hint && <span className="mt-1.5 block text-xs text-slate-500 dark:text-slate-400">{hint}</span>}
     </label>
   );
 }
 
 export const inputClass =
-  "block w-full rounded-lg border-0 bg-white px-3 py-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-700 dark:placeholder:text-slate-500 dark:focus:ring-indigo-400";
+  "block w-full rounded-xl border border-slate-900/10 bg-white/70 px-3 py-2 text-slate-900 shadow-[inset_0_1px_2px_rgb(15_23_42/0.06)] outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 sm:text-sm dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20";
+
+export const fileInputClass =
+  "text-sm text-slate-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-900/5 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-800 hover:file:bg-slate-900/10 dark:text-slate-400 dark:file:bg-white/10 dark:file:text-slate-100 dark:hover:file:bg-white/15";
+
+export const linkClass =
+  "font-semibold text-indigo-700 underline decoration-indigo-500/30 underline-offset-4 hover:decoration-indigo-500 dark:text-indigo-300";
 
 export function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -101,20 +141,21 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
   );
 }
 
+/** Code panels stay dark in both themes, like a terminal. */
 export function Mono({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <pre className={`overflow-x-auto rounded-lg bg-slate-900 p-3 font-mono text-xs leading-relaxed text-slate-100 dark:bg-slate-950 dark:ring-1 dark:ring-slate-800 ${className}`}>
+    <pre className={`overflow-x-auto rounded-xl bg-slate-950/90 p-4 font-mono text-xs leading-relaxed text-slate-200 ring-1 ring-white/10 ${className}`}>
       {children}
     </pre>
   );
 }
 
 const STATE_STYLES: Record<VaultState, string> = {
-  setup: "bg-slate-100 text-slate-700 ring-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-600",
-  active: "bg-emerald-100 text-emerald-800 ring-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-500/40",
-  warning: "bg-amber-100 text-amber-800 ring-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-500/40",
-  grace: "bg-orange-100 text-orange-800 ring-orange-300 dark:bg-orange-500/15 dark:text-orange-300 dark:ring-orange-500/40",
-  released: "bg-red-100 text-red-800 ring-red-300 dark:bg-red-500/15 dark:text-red-300 dark:ring-red-500/40",
+  setup: "bg-slate-500/10 text-slate-700 ring-slate-500/25 dark:text-slate-300 dark:ring-slate-400/30",
+  active: "bg-emerald-500/12 text-emerald-800 ring-emerald-600/25 dark:text-emerald-300 dark:ring-emerald-400/30",
+  warning: "bg-amber-500/15 text-amber-800 ring-amber-600/30 dark:text-amber-300 dark:ring-amber-400/30",
+  grace: "bg-orange-500/15 text-orange-800 ring-orange-600/30 dark:text-orange-300 dark:ring-orange-400/30",
+  released: "bg-red-500/12 text-red-800 ring-red-600/25 dark:text-red-300 dark:ring-red-400/30",
 };
 const STATE_LABELS: Record<VaultState, string> = {
   setup: "Setup",
@@ -126,12 +167,13 @@ const STATE_LABELS: Record<VaultState, string> = {
 
 /** One colour scheme everywhere: Active green, Warning amber, Grace orange, Released red. */
 export function StateBadge({ state, large = false }: { state: VaultState; large?: boolean }) {
+  const urgent = state === "warning" || state === "grace";
   return (
     <span
       data-testid="state-badge"
-      className={`inline-flex items-center gap-1.5 rounded-full font-semibold ring-1 ring-inset ${STATE_STYLES[state]} ${large ? "px-3 py-1 text-base" : "px-2.5 py-0.5 text-xs"}`}
+      className={`inline-flex items-center gap-1.5 rounded-full font-semibold ring-1 ring-inset ${STATE_STYLES[state]} ${large ? "px-3 py-1 text-sm" : "px-2.5 py-0.5 text-xs"}`}
     >
-      <span className="h-2 w-2 rounded-full bg-current" aria-hidden />
+      <span className={`h-1.5 w-1.5 rounded-full bg-current ${urgent ? "animate-pulse" : ""}`} aria-hidden />
       {STATE_LABELS[state]}
     </span>
   );

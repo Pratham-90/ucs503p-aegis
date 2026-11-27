@@ -48,7 +48,7 @@ export function ThemeToggle() {
       aria-label={label}
       title={label}
       onClick={() => setTheme(next)}
-      className="rounded-md p-2 text-slate-700 hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus-visible:outline-indigo-400"
+      className="rounded-lg p-1.5 text-slate-600 transition hover:bg-slate-900/5 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
     >
       <ThemeIcon theme={theme} />
     </button>

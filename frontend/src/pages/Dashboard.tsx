@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, errorMessage, type ServerView, type VaultSummary } from "../api";
 import { Countdown } from "../components/Countdown";
-import { Alert, Button, Card, formatDuration, Mono, StateBadge } from "../components/ui";
+import { Alert, Button, buttonClass, Card, formatDuration, Mono, PageHeader, StateBadge } from "../components/ui";
 
 const EXPLAIN: Record<string, string> = {
   active: "Sealed. Check in before the deadline to keep it that way.",
@@ -62,7 +62,7 @@ export function Dashboard() {
   if (vault === null) {
     return (
       <Card title="You don't have a vault yet" subtitle="Create one: choose trustees, a threshold and a check-in schedule.">
-        <Link to="/vault/new" className="inline-flex rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+        <Link to="/vault/new" className={buttonClass("primary")}>
           Create my vault
         </Link>
       </Card>
@@ -72,6 +72,9 @@ export function Dashboard() {
   const enrolled = vault.trustees.filter((t) => t.enrolled).length;
   return (
     <div className="space-y-6">
+      <PageHeader eyebrow="Owner dashboard" title="Your legacy vault">
+        Check in on schedule to keep it sealed. If you stop, your trustees can open it after the grace period.
+      </PageHeader>
       {error && <Alert kind="error">{error}</Alert>}
       {vault.state === "setup" ? (
         <Card title="Vault setup in progress" actions={<StateBadge state="setup" large />}>
@@ -79,7 +82,7 @@ export function Dashboard() {
             {enrolled} of {vault.n} trustees have enrolled. Once all of them have, encrypt and upload your secret to
             arm the vault.
           </p>
-          <Link to="/vault/new" className="mt-4 inline-flex rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+          <Link to="/vault/new" className={buttonClass("primary", "mt-4")}>
             Continue setup
           </Link>
         </Card>
@@ -95,9 +98,9 @@ export function Dashboard() {
                 <Countdown label="release if no check-in" target={vault.release_at} offsetMs={offsetMs} />
               </>
             )}
-            <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 p-4 ring-1 ring-slate-200 dark:ring-slate-700">
-              <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">threshold</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+            <div className="glass-inset rounded-xl p-4">
+              <div className="font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">threshold</div>
+              <div className="mt-2 font-mono text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
                 {vault.k} of {vault.n}
               </div>
               <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -124,9 +127,9 @@ export function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Trustees" subtitle="Each holds one encrypted share; their private key never leaves their device.">
-          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+          <ul className="divide-y divide-slate-900/5 dark:divide-white/5">
             {vault.trustees.map((t) => (
-              <li key={t.id} className="flex items-center justify-between py-2 text-sm">
+              <li key={t.id} className="flex items-center justify-between py-2.5 text-sm">
                 <span>
                   <span className="mr-2 font-mono text-slate-400 dark:text-slate-500">#{t.position}</span>
                   {t.email}
@@ -140,11 +143,11 @@ export function Dashboard() {
           {vault.checkins.length === 0 ? (
             <p className="text-sm text-slate-500 dark:text-slate-400">No check-ins yet.</p>
           ) : (
-            <ul className="space-y-1 text-sm">
+            <ul className="divide-y divide-slate-900/5 text-sm dark:divide-white/5">
               {vault.checkins.map((c) => (
-                <li key={c.at} className="flex justify-between">
+                <li key={c.at} className="flex justify-between py-2.5">
                   <span>{new Date(c.at).toLocaleString()}</span>
-                  <span className="text-slate-500 dark:text-slate-400">{c.source}</span>
+                  <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{c.source}</span>
                 </li>
               ))}
             </ul>
