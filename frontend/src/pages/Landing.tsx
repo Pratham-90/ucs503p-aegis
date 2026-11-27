@@ -86,7 +86,7 @@ function VaultPreview() {
               className={`rounded-lg py-2 text-center font-mono text-xs ${
                 n < 3
                   ? "bg-indigo-600 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_6px_16px_-8px_rgb(79_70_229/0.8)]"
-                  : "glass-inset text-slate-400 dark:text-slate-500"
+                  : "glass-inset text-slate-600 dark:text-slate-400"
               }`}
             >
               share {n}

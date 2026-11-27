@@ -1,12 +1,12 @@
 {
   "scores": {
-    "performance": 100,
-    "accessibility": 100,
+    "performance": 98,
+    "accessibility": 96,
     "best-practices": 96,
-    "seo": 91
+    "seo": 100
   },
   "command": "node scripts/lighthouse.mjs --base-url https://ucs503p-aegis.vercel.app",
-  "environment": "deployed: https://ucs503p-aegis.vercel.app (Vercel), headless Chrome 155.0.0.0",
-  "measured_at": "2026-10-11T09:30:30+00:00",
-  "notes": "Lighthouse 13.5.0, mobile profile, simulate throttling; final URL https://ucs503p-aegis.vercel.app/; audits below full score: First Contentful Paint; Speed Index; Browser errors were logged to the console; robots.txt is not valid"
+  "environment": "deployed: https://ucs503p-aegis.vercel.app (Vercel), headless Chrome 158.0.0.0",
+  "measured_at": "2026-11-27T16:05:42+00:00",
+  "notes": "Lighthouse 13.5.0, mobile profile, simulate throttling; final URL https://ucs503p-aegis.vercel.app/; audits below full score: First Contentful Paint; Largest Contentful Paint; Speed Index; Background and foreground colors do not have a sufficient contrast ratio.; Browser errors were logged to the console"
 }
